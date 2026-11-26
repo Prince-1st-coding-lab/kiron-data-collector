@@ -7,6 +7,9 @@ A Node.js 18+ collector for authorized PlayBetMan football data. It discovers up
 - Calls `/league/fetchP` to discover the available round timeline.
 - Uses API-provided `round_id`, `start_time`, `end_time`, `season_id` and `competition_id`; it never guesses round IDs.
 - Polls the timeline automatically and fetches fixtures for the next upcoming round.
+- Polls `/league/fetchLive` every 2 seconds while the selected round is active (configurable).
+- Saves live snapshots tagged with their round ID and scheduled start/end times.
+- Exposes the latest live response to the dashboard beside each prediction; field-level score rendering depends on the actual live response schema.
 - Retries a round if its fixtures are not available yet.
 - Generates predictions tagged with the exact target round ID and its scheduled times.
 - Refreshes completed results every minute by default.
@@ -40,7 +43,8 @@ Copy `.env.example` to `.env`, then set your actual league page URL. Do not shar
 | `PLAYBETMAN_TIMEZONE` | Timezone sent to the API and used to interpret round times |
 | `COMPETITION_ID` | Competition identifier; the supplied timeline example uses `10` |
 | `MARKET_TYPE` | Market code, e.g. `1X2` |
-| `ROUND_POLL_INTERVAL_SECONDS` | How often to call `/league/fetchP`; default `15` |
+| `ROUND_POLL_INTERVAL_SECONDS` | How often to call `/league/fetchP`; default `5` |
+| `LIVE_POLL_INTERVAL_SECONDS` | How often to call `/league/fetchLive` during an active round; default `2` |
 | `RESULTS_INTERVAL_MINUTES` | Completed-results refresh interval; default `1` |
 | `STANDINGS_INTERVAL_MINUTES` | Standings refresh interval; default `30` |
 | `MAX_PREVIOUS_ROUNDS` | Number of newest completed rounds used as prediction history; default `5` |
@@ -93,6 +97,6 @@ Predictions are estimates, not guarantees. The model does not currently incorpor
 ## Notes
 
 - API-provided start/end times are treated as authoritative; the collector does not calculate round IDs or round schedules.
-- The current scheduler discovers and predicts the next upcoming round. It does not generate predictions for every future period returned in one timeline response.
+- The scheduler discovers the next upcoming round, fetches its fixtures, and keeps that round active through its API-provided start/end window. During the active window it polls `/league/fetchLive` with `period=start_time` and `end_time=end_time`. It does not fetch live data outside the round window.
 - Polling intervals are configurable starting values, not confirmed API rate limits. Respect the service's access rules.
 - This project does not guarantee betting outcomes.
