@@ -39,6 +39,7 @@ async function post(endpoint, payload = {}) {
 }
 
 module.exports = {
+  fetchPeriods: (payload) => post("/league/fetchP", payload),
   fetchMatches: (payload) => post("/league/fetchMatches", payload),
   fetchResults: (payload) => post("/league/fetchResults", payload),
   fetchLive: (payload) => post("/league/fetchLive", payload),
