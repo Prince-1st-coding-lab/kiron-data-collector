@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "node --test src/tests/normalizers.test.js src/tests/prediction.test.js src/tests/markets.test.js",
+    "test": "node --test src/tests/normalizers.test.js src/tests/prediction.test.js src/tests/markets.test.js src/tests/performance.test.js",
     "test:connection": "node src/test-connection.js",
     "predict": "node src/run-predictions.js"
   },
