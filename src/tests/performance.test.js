@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { actualMarketOutcomes } = require("../services/performance.service");
+const { actualMarketOutcomes, parseInTimezone } = require("../services/performance.service");
 
 test("actual result maps to all five supported market outcomes", () => {
   assert.deepEqual(actualMarketOutcomes({ homeScore: 2, awayScore: 1 }), {
@@ -24,4 +24,11 @@ test("draw and no-BTTS results map correctly", () => {
 
 test("invalid score cannot be evaluated", () => {
   assert.equal(actualMarketOutcomes({ homeScore: null, awayScore: 1 }), null);
+});
+
+test("API local kickoff time is converted using the configured timezone", () => {
+  assert.equal(
+    new Date(parseInTimezone("2026-11-26 14:00:00", "Africa/Johannesburg")).toISOString(),
+    "2026-11-26T12:00:00.000Z"
+  );
 });
