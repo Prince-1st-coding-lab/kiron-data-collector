@@ -12,11 +12,34 @@ function latest(prefix) {
     .sort();
   if (!files.length) return null;
   const filename = files[files.length - 1];
+  const filePath = path.join(ROOT, filename);
   try {
-    return { filename, data: JSON.parse(fs.readFileSync(path.join(ROOT, filename), "utf8")) };
+    const stat = fs.statSync(filePath);
+    return {
+      filename,
+      collectedAt: stat.mtime.toISOString(),
+      data: JSON.parse(fs.readFileSync(filePath, "utf8")),
+    };
   } catch (error) {
-    return { filename, error: "Could not parse latest dataset: " + error.message, data: null };
+    return { filename, collectedAt: null, error: "Could not read latest dataset: " + error.message, data: null };
   }
+}
+
+function getResultsFreshness(resultsFile) {
+  const intervalMinutes = Number(process.env.RESULTS_INTERVAL_MINUTES || 10);
+  const staleAfterMs = (Number.isFinite(intervalMinutes) && intervalMinutes > 0 ? intervalMinutes : 10) * 2 * 60 * 1000;
+  if (!resultsFile?.collectedAt) {
+    return { status: "NO_DATA", lastCollectedAt: null, ageMs: null, staleAfterMs };
+  }
+
+  const collectedAtMs = new Date(resultsFile.collectedAt).getTime();
+  const ageMs = Math.max(0, Date.now() - collectedAtMs);
+  return {
+    status: ageMs <= staleAfterMs ? "FRESH" : "STALE",
+    lastCollectedAt: resultsFile.collectedAt,
+    ageMs,
+    staleAfterMs,
+  };
 }
 
 function sendJson(res, data) {
@@ -47,6 +70,7 @@ function startDashboardServer(port = Number(process.env.DASHBOARD_PORT || 3000))
       if (url.pathname === "/api/dashboard") {
         return sendJson(res, {
           updatedAt: new Date().toISOString(),
+          resultsFreshness: getResultsFreshness(results),
           predictions: predictions?.data?.predictions || [],
           predictionMeta: predictions?.data || null,
           matches: Array.isArray(matches?.data) ? matches.data : [],
@@ -67,6 +91,7 @@ function startDashboardServer(port = Number(process.env.DASHBOARD_PORT || 3000))
         return sendJson(res, {
           ok: true,
           dataDirectoryExists: fs.existsSync(ROOT),
+          resultsFreshness: getResultsFreshness(results),
           latestFiles: {
             predictions: predictions?.filename || null,
             matches: matches?.filename || null,
