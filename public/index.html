@@ -47,7 +47,11 @@
 </section>
 <section class="panel">
  <div class="panelhead"><h2>Match predictions</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><span class="tag" id="roundInfo">Round: —</span><span class="tag" id="modelName">Statistical baseline</span></div></div>
- <div class="tablewrap"><table><thead><tr><th>Round</th><th>Fixture</th><th>Kick-off</th><th>Expected goals</th><th>Historical form</th><th>1X2 probabilities</th><th>Other markets</th><th>Likely score</th><th>Live score</th></tr></thead><tbody id="predictionRows"><tr><td colspan="7" class="empty">Loading dashboard data…</td></tr></tbody></table></div>
+ <div class="tablewrap"><table><thead><tr><th>Round</th><th>Fixture</th><th>Kick-off</th><th>Expected goals</th><th>Historical form</th><th>1X2 probabilities</th><th>Other markets</th><th>Likely score</th><th>Live score</th></tr></thead><tbody id="predictionRows"><tr><td colspan="9" class="empty">Loading dashboard data…</td></tr></tbody></table></div>
+</section>
+<section class="panel">
+ <div class="panelhead"><h2>Prediction history — predicted vs actual</h2><span class="tag">Scored forecasts</span></div>
+ <div class="tablewrap"><table><thead><tr><th>Fixture</th><th>Market</th><th>Predicted</th><th>Actual</th><th>Probability</th><th>Evaluation</th><th>Kick-off</th></tr></thead><tbody id="recentHistory"><tr><td colspan="7" class="empty">No historical predictions evaluated yet.</td></tr></tbody></table></div>
 </section>
 <section class="panel">
  <div class="panelhead"><h2>Latest fixtures</h2><span class="tag">From normalized data</span></div>
@@ -143,6 +147,8 @@ function renderPerformance(performance){
  el("marketAccuracy").innerHTML=entries.length?entries.map(([key,value])=>'<tr><td>'+safe(key)+'</td><td>'+safe(value.evaluated)+'</td><td>'+safe(value.correct)+'</td><td class="accuracy-good">'+(value.accuracy==null?"Not available":safe(value.accuracy)+"%")+'</td></tr>').join(""):emptyRow(4,"No evaluated predictions yet.");
  const models=Object.entries(p.byModel||{});
  el("modelAccuracy").innerHTML=models.length?models.map(([key,value])=>'<tr><td>'+safe(key)+'</td><td>'+safe(value.evaluated)+'</td><td>'+safe(value.correct)+'</td><td class="accuracy-good">'+(value.accuracy==null?"Not available":safe(value.accuracy)+"%")+'</td></tr>').join(""):emptyRow(4,"No evaluated model predictions yet.");
+ const history=Array.isArray(p.recentEvaluations)?p.recentEvaluations:[];
+ el("recentHistory").innerHTML=history.length?history.slice(0,50).map(row=>'<tr><td class="teams">'+safe(row.homeTeam)+' vs '+safe(row.awayTeam)+'</td><td>'+safe(row.marketKey)+'</td><td>'+safe(row.selected)+'</td><td>'+safe(Array.isArray(row.actual)?row.actual.join(" / "):row.actual)+'</td><td>'+safe(row.probability)+'%</td><td class="'+(row.correct?"accuracy-good":"warning")+'">'+(row.correct?"CORRECT":"INCORRECT")+'</td><td>'+date(row.startTime)+'</td></tr>').join(""):emptyRow(7,"No historical predictions evaluated yet.");
 }
 
 function emptyRow(cols,msg){return '<tr><td colspan="'+cols+'" class="empty">'+safe(msg)+'</td></tr>'}
