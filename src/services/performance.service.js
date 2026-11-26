@@ -36,7 +36,7 @@ function actualMarketOutcomes(result) {
     BTTS: btts,
     "1X2_BTTS": outcome + "_" + btts,
     OVER_UNDER_1_5: home + away >= 2 ? "OVER" : "UNDER",
-    DOUBLE_CHANCE: outcome === "HOME" || outcome === "DRAW" ? "1X" : outcome === "AWAY" ? "X2" : "12",
+    DOUBLE_CHANCE: outcome === "HOME" ? ["1X", "12"] : outcome === "AWAY" ? ["12", "X2"] : ["1X", "X2"],
   };
 }
 
@@ -80,7 +80,7 @@ function evaluateHistoricalPredictions() {
           marketKey,
           selected,
           actual: actual[marketKey],
-          correct: selected === actual[marketKey],
+          correct: Array.isArray(actual[marketKey]) ? actual[marketKey].includes(selected) : selected === actual[marketKey],
           probability: Number(market.outcomes?.[selected] ?? 0),
           generatedAt: snapshot.generatedAt,
           startTime: result.startTime,
