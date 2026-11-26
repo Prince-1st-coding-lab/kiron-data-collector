@@ -1,13 +1,14 @@
 {
   "name": "kiron-data-collector",
-  "version": "1.1.0",
-  "description": "Node.js collector for authorized PlayBetMan football data",
+  "version": "1.2.0",
+  "description": "Node.js collector and statistical football analysis engine for authorized PlayBetMan data",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "node --test",
-    "test:connection": "node src/test-connection.js"
+    "test:connection": "node src/test-connection.js",
+    "predict": "node src/run-predictions.js"
   },
   "dependencies": {
     "axios": "^1.7.9",
