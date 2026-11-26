@@ -60,7 +60,10 @@ async function collectMatchesForMarkets({ round_id, competition_id, marketTypes,
     });
     rawFiles.push(saveRawResponse("matches", response));
 
-    const normalized = normalizeMatches(response);
+    const normalized = normalizeMatches(response).map((match) => ({
+      ...match,
+      markets: (match.markets || []).map((market) => ({ ...market, requestedMarketType: marketType })),
+    }));
     for (const match of normalized) {
       const key = match.matchId
         ? String(match.matchId)
@@ -81,7 +84,7 @@ async function collectMatchesForMarkets({ round_id, competition_id, marketTypes,
       const combined = [...(existing.markets || []), ...(match.markets || [])];
       const uniqueMarkets = new Map();
       for (const market of combined) {
-        const marketKey = [market.marketType, market.oddType].join("|");
+        const marketKey = [market.marketType || market.requestedMarketType, market.oddType].join("|");
         uniqueMarkets.set(marketKey, market);
       }
       existing.markets = [...uniqueMarkets.values()];
