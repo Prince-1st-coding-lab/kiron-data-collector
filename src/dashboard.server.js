@@ -76,6 +76,7 @@ function startDashboardServer(port = Number(process.env.DASHBOARD_PORT || 3000))
           matches: Array.isArray(matches?.data) ? matches.data : [],
           results: Array.isArray(results?.data) ? results.data : [],
           live: live?.data || null,
+          liveCollectedAt: live?.collectedAt || null,
           standings: standings?.data || null,
           files: {
             predictions: predictions?.filename || null,
