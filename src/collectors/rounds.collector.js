@@ -75,6 +75,17 @@ async function collectNextRound() {
     tab: "",
   });
 
+  if (!collected.totalMatches) {
+    return {
+      periodsFile,
+      totalPeriods: periods.length,
+      round: nextPeriod,
+      matches: 0,
+      retrying: true,
+      reason: "The API returned no fixtures yet; this round will be retried on the next poll.",
+    };
+  }
+
   const predictionRun = generatePredictionsForRound(
     nextPeriod.roundId,
     collected.matches,
