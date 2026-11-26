@@ -92,6 +92,7 @@ function evaluateHistoricalPredictions() {
         if (!selected) continue;
         seen.add(unique);
         records.push({
+          model: snapshot.model || "unknown",
           roundId: snapshot.roundId || prediction.roundId || result.roundId || null,
           matchId: result.matchId || prediction.matchId || null,
           marketKey,
@@ -117,9 +118,21 @@ function evaluateHistoricalPredictions() {
       accuracy: rows.length ? Number((correct / rows.length * 100).toFixed(1)) : null,
     };
   }
+  const byModel = {};
+  for (const model of [...new Set(records.map((row) => row.model))]) {
+    const rows = records.filter((row) => row.model === model);
+    const modelCorrect = rows.filter((row) => row.correct).length;
+    byModel[model] = {
+      evaluated: rows.length,
+      correct: modelCorrect,
+      incorrect: rows.length - modelCorrect,
+      accuracy: rows.length ? Number((modelCorrect / rows.length * 100).toFixed(1)) : null,
+    };
+  }
   const correct = records.filter((row) => row.correct).length;
   return {
     evaluatedPicks: records.length,
+    byModel,
     correct,
     incorrect: records.length - correct,
     accuracy: records.length ? Number((correct / records.length * 100).toFixed(1)) : null,
@@ -150,6 +163,8 @@ function formSupport(prediction, marketKey, selection) {
   const away = prediction.awayRecentForm || {};
   const homePoints = Number(home.pointsPerMatch || 0);
   const awayPoints = Number(away.pointsPerMatch || 0);
+  if ((marketKey === "BTTS" || marketKey === "OVER_UNDER_1_5") &&
+      (!Number(home.matches || 0) || !Number(away.matches || 0))) return 50;
   if (marketKey === "BTTS") {
     const goalsFor = Number(home.goalsScored || 0) + Number(away.goalsScored || 0);
     const goalsAgainst = Number(home.goalsConceded || 0) + Number(away.goalsConceded || 0);
