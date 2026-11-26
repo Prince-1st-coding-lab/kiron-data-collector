@@ -43,7 +43,7 @@ Copy `.env.example` to `.env`, then set your actual league page URL. Do not shar
 | `PLAYBETMAN_LEAGUE_URL` | Actual league page URL used by the tested requests |
 | `PLAYBETMAN_TIMEZONE` | Timezone sent to the API and used to interpret round times |
 | `COMPETITION_ID` | Competition identifier; the supplied timeline example uses `10` |
-| `MARKET_TYPE` | Market code, e.g. `1X2` |
+| `MARKET_TYPE` | Market code used for round timeline and live polling; default `1X2` |\n| `MARKET_SUB_TYPES` | Comma-separated verified provider subtype IDs fetched for each round; defaults to `MARKET_TYPE` |
 | `ROUND_POLL_INTERVAL_SECONDS` | How often to call `/league/fetchP`; default `5` |
 | `LIVE_POLL_INTERVAL_SECONDS` | How often to call `/league/fetchLive` during an active round; default `2` |
 | `RESULTS_INTERVAL_MINUTES` | Completed-results refresh interval; default `1` |
@@ -116,7 +116,7 @@ Supported internal market keys:
 - `OVER_UNDER_1_5`: OVER, UNDER
 - `DOUBLE_CHANCE`: 1X, 12, X2
 
-These are internal canonical keys, not confirmed PlayBetMan `sub_type_id` values. When provider market requests are mapped, preserve the provider's exact subtype ID and raw response alongside the canonical key. Do not assume the same API market ID for all market families.
+These are internal canonical keys, not confirmed PlayBetMan `sub_type_id` values. The collector supports multiple provider subtype IDs through `MARKET_SUB_TYPES` and merges their responses by match ID. Set this variable only after capturing each exact `sub_type_id` from the PlayBetMan Network requests; do not assume canonical market names are valid provider IDs. Each raw response is archived, and each normalized market retains its requested provider subtype.
 
 All market probabilities are derived from the same truncated 0..8 independent-Poisson scoreline grid and normalized to 100%. Combination market outcomes are mutually exclusive. These are model probabilities, not bookmaker odds or guaranteed outcomes. The current market calculations do not yet consume market-specific odds.
 
