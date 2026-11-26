@@ -1,5 +1,5 @@
 const playBetMan = require("../clients/playbetman.client");
-const { collectMatches } = require("./matches.collector");
+const { collectMatchesForMarkets } = require("./matches.collector");
 const { normalizePeriods } = require("../normalizers/periods.normalizer");
 const { saveRawResponse, saveNormalizedData } = require("../services/storage.service");
 const { generatePredictionsForRound } = require("../services/prediction.service");
@@ -83,10 +83,15 @@ async function collectNextRound() {
     " | ends " + nextPeriod.endTime
   );
 
-  const collected = await collectMatches({
+  const marketTypes = (process.env.MARKET_SUB_TYPES || subTypeId)
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  const collected = await collectMatchesForMarkets({
     round_id: nextPeriod.roundId,
     competition_id: nextPeriod.competitionId || competitionId,
-    sub_type_id: subTypeId,
+    marketTypes,
     tab: "",
   });
 
