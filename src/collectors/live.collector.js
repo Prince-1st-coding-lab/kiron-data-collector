@@ -20,7 +20,15 @@ async function collectLive({ period, end_time, competition_id, round_id, sub_typ
   });
 
   saveRawResponse("live", response);
-  const snapshot = normalizeSnapshot("live", response);
+  const snapshot = {
+    ...normalizeSnapshot("live", response),
+    round: {
+      roundId: String(round_id),
+      period,
+      endTime: end_time,
+      competitionId: competition_id,
+    },
+  };
   saveNormalizedData("live", snapshot);
   return snapshot;
 }
