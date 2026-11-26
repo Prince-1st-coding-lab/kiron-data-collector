@@ -6,6 +6,37 @@ const DATA_DIR = path.join(process.cwd(), "data", "normalized");
 const PRIOR_MATCHES = 3;
 const MAX_GOALS = 8;
 
+function getPredictionConfig() {
+  const currentRoundId = String(process.env.CURRENT_ROUND_ID || process.env.ROUND_ID || "").trim();
+  const maxPreviousRounds = Number(process.env.MAX_PREVIOUS_ROUNDS || 5);
+  if (!currentRoundId) throw new Error("Set CURRENT_ROUND_ID or ROUND_ID to the round being predicted.");
+  if (!Number.isInteger(maxPreviousRounds) || maxPreviousRounds < 1) {
+    throw new Error("MAX_PREVIOUS_ROUNDS must be a positive whole number.");
+  }
+  return { currentRoundId, maxPreviousRounds };
+}
+
+function selectPreviousRounds(results, currentRoundId, maxPreviousRounds) {
+  const roundDates = new Map();
+  for (const match of results) {
+    if (!match.roundId || String(match.roundId) === String(currentRoundId)) continue;
+    const roundId = String(match.roundId);
+    const timestamp = match.startTime ? new Date(String(match.startTime).replace(" ", "T")).getTime() : 0;
+    const previous = roundDates.get(roundId) || 0;
+    if (Number.isFinite(timestamp) && timestamp > previous) roundDates.set(roundId, timestamp);
+    else if (!roundDates.has(roundId)) roundDates.set(roundId, 0);
+  }
+  const selectedRoundIds = [...roundDates.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, maxPreviousRounds)
+    .map(([roundId]) => roundId);
+  const selected = new Set(selectedRoundIds);
+  return {
+    results: results.filter((match) => match.roundId != null && selected.has(String(match.roundId))),
+    selectedRoundIds,
+  };
+}
+
 function validResult(match) {
   return match &&
     typeof match.homeTeam === "string" &&
@@ -199,8 +230,14 @@ function generatePredictions() {
     return { filePath: null, predictions: [], reason: "No normalized fixtures are available." };
   }
 
-  const fixtures = JSON.parse(fs.readFileSync(path.join(DATA_DIR, latestFixtureFile), "utf8"));
-  const historicalResults = readHistoricalResults();
+  const { currentRoundId, maxPreviousRounds } = getPredictionConfig();
+  const allFixtures = JSON.parse(fs.readFileSync(path.join(DATA_DIR, latestFixtureFile), "utf8"));
+  const fixtures = Array.isArray(allFixtures)
+    ? allFixtures.filter((fixture) => String(fixture.roundId ?? "") === currentRoundId)
+    : [];
+  const allHistoricalResults = readHistoricalResults();
+  const selectedHistory = selectPreviousRounds(allHistoricalResults, currentRoundId, maxPreviousRounds);
+  const historicalResults = selectedHistory.results;
   const predictions = buildPredictions(fixtures, historicalResults);
 
   const output = {
@@ -208,6 +245,9 @@ function generatePredictions() {
     model: "venue-adjusted-independent-poisson-baseline",
     generatedAt: new Date().toISOString(),
     historicalMatches: historicalResults.length,
+    currentRoundId,
+    maxPreviousRounds,
+    historicalRoundIds: selectedHistory.selectedRoundIds,
     predictions,
   };
 
@@ -219,5 +259,6 @@ function generatePredictions() {
 module.exports = {
   buildPredictions,
   readHistoricalResults,
+  selectPreviousRounds,
   generatePredictions,
 };
