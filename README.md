@@ -14,7 +14,8 @@ A Node.js 18+ collector for authorized PlayBetMan football data. It discovers up
 - Generates predictions tagged with the exact target round ID and its scheduled times.
 - Refreshes completed results every minute by default.
 - Stores timestamped raw and normalized JSON archives.
-- Uses a venue-adjusted independent Poisson baseline for 1X2 estimates and expected goals.
+- Uses a venue-adjusted independent Poisson baseline to estimate expected goals and derive 1X2, BTTS, 1X2 + BTTS, Over/Under 1.5 and Double Chance probabilities.
+- Uses a modular market registry and shared scoreline probability distribution; each fixture has one identity and one actual score across all markets.
 - Keeps previous completed rounds available as prediction history.
 - Includes a local dashboard and automated tests.
 
@@ -90,7 +91,8 @@ The current model is a transparent statistical baseline, not a trained machine-l
 2. Excludes the target round and selects the newest configured number of previous rounds.
 3. Calculates home-team home scoring/conceding rates and away-team away scoring/conceding rates.
 4. Smooths sparse team rates toward competition averages using a three-match prior.
-5. Estimates expected goals and independent-Poisson 1X2 probabilities.
+5. Estimates expected goals and builds one shared independent-Poisson scoreline distribution.
+6. Derives market probabilities from that distribution for 1X2, BTTS, 1X2 + BTTS, Over/Under 1.5 and Double Chance.
 
 Predictions are estimates, not guarantees. The model does not currently incorporate player availability, injuries, weather or verified live data. Insufficient history is reported rather than fabricated.
 
@@ -100,3 +102,21 @@ Predictions are estimates, not guarantees. The model does not currently incorpor
 - The scheduler discovers the next upcoming round, fetches its fixtures, and keeps that round active through its API-provided start/end window. During the active window it polls `/league/fetchLive` with `period=start_time` and `end_time=end_time`. It does not fetch live data outside the round window.
 - Polling intervals are configurable starting values, not confirmed API rate limits. Respect the service's access rules.
 - This project does not guarantee betting outcomes.
+
+
+## Modular market architecture
+
+Market definitions live in `src/markets/market.registry.js`; probability calculations live in `src/markets/market.calculators.js`. The prediction service attaches a `markets` object to each estimated fixture while retaining the existing top-level `probabilities` fields for backward compatibility.
+
+Supported internal market keys:
+
+- `1X2`: HOME, DRAW, AWAY
+- `BTTS`: YES, NO
+- `1X2_BTTS`: HOME_YES, HOME_NO, DRAW_YES, DRAW_NO, AWAY_YES, AWAY_NO
+- `OVER_UNDER_1_5`: OVER, UNDER
+- `DOUBLE_CHANCE`: 1X, 12, X2
+
+These are internal canonical keys, not confirmed PlayBetMan `sub_type_id` values. When provider market requests are mapped, preserve the provider's exact subtype ID and raw response alongside the canonical key. Do not assume the same API market ID for all market families.
+
+All market probabilities are derived from the same truncated 0..8 independent-Poisson scoreline grid and normalized to 100%. Combination market outcomes are mutually exclusive. These are model probabilities, not bookmaker odds or guaranteed outcomes. The current market calculations do not yet consume market-specific odds.
+
