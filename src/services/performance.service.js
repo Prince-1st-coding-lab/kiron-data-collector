@@ -19,6 +19,23 @@ function readJsonFiles(prefix) {
     .filter(Boolean);
 }
 
+function parseInTimezone(value, timeZone = process.env.PLAYBETMAN_TIMEZONE || "Africa/Johannesburg") {
+  if (!value) return NaN;
+  const match = String(value).match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?$/);
+  if (!match) return new Date(value).getTime();
+  const [, y, mo, d, h, mi, s = "0"] = match;
+  const targetUtc = Date.UTC(Number(y), Number(mo) - 1, Number(d), Number(h), Number(mi), Number(s));
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone, year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23",
+  }).formatToParts(new Date(targetUtc));
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  const representedUtc = Date.UTC(Number(values.year), Number(values.month) - 1,
+    Number(values.day), Number(values.hour), Number(values.minute), Number(values.second));
+  const offset = representedUtc - targetUtc;
+  return targetUtc - offset;
+}
+
 function resultKey(match) {
   return match.matchId
     ? "id:" + String(match.matchId)
@@ -62,7 +79,7 @@ function evaluateHistoricalPredictions() {
       const key = resultKey(prediction);
       const result = resultMap.get(key);
       if (!result) continue;
-      const kickoff = new Date(String(result.startTime || prediction.startTime || "").replace(" ", "T")).getTime();
+      const kickoff = parseInTimezone(result.startTime || prediction.startTime);
       // Prevent look-ahead leakage: only score forecasts created before kickoff.
       if (!Number.isFinite(generatedAt) || !Number.isFinite(kickoff) || generatedAt >= kickoff) continue;
       const unique = [snapshot.roundId || prediction.roundId || "", key, generatedAt].join("|");
@@ -192,4 +209,4 @@ function buildTopPicks(performance = evaluateHistoricalPredictions(), roundLimit
   return candidates.sort((a, b) => b.rankingScore - a.rankingScore).slice(0, 3);
 }
 
-module.exports = { evaluateHistoricalPredictions, buildTopPicks, recentRoundPredictionSnapshots, actualMarketOutcomes };
+module.exports = { evaluateHistoricalPredictions, buildTopPicks, recentRoundPredictionSnapshots, actualMarketOutcomes, parseInTimezone };
