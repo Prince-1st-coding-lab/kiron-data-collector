@@ -27,7 +27,7 @@
  <div class="card stat"><span>Model status</span><strong id="modelStatus" style="font-size:18px">Waiting</strong></div>
 </section>
 <section class="panel">
- <div class="panelhead"><h2>Match predictions</h2><span class="tag" id="modelName">Statistical baseline</span></div>
+ <div class="panelhead"><h2>Match predictions</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><span class="tag" id="roundInfo">Round: —</span><span class="tag" id="modelName">Statistical baseline</span></div></div>
  <div class="tablewrap"><table><thead><tr><th>Fixture</th><th>Kick-off</th><th>Expected goals</th><th>1X2 probabilities</th><th>Likely score</th></tr></thead><tbody id="predictionRows"><tr><td colspan="5" class="empty">Loading dashboard data…</td></tr></tbody></table></div>
 </section>
 <section class="panel">
@@ -91,6 +91,8 @@ async function load(){
   const estimated=predictions.filter(p=>p.status==="estimated").length;
   el("modelStatus").textContent=estimated?"Active":"No estimates";
   el("modelName").textContent=data.predictionMeta?.model||"Statistical baseline";
+  const roundMeta=data.predictionMeta||{};
+  el("roundInfo").textContent=roundMeta.roundId?"Round "+roundMeta.roundId+" · "+(roundMeta.roundStartTime?date(roundMeta.roundStartTime):"scheduled time unavailable"):"No round prediction yet";
   el("updated").textContent="Updated "+new Date().toLocaleTimeString();
   el("predictionRows").innerHTML=predictions.length?predictions.map(p=>{
    const probs=p.probabilities||{};
