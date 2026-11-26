@@ -118,12 +118,16 @@ function buildTeamStats(results) {
       teams.set(name, {
         home: { played: 0, scored: 0, conceded: 0 },
         away: { played: 0, scored: 0, conceded: 0 },
+        recent: [],
       });
     }
     return teams.get(name);
   }
 
-  for (const match of results.filter(validResult)) {
+  const orderedResults = results.filter(validResult).slice().sort((a, b) =>
+    String(a.startTime || "").localeCompare(String(b.startTime || ""))
+  );
+  for (const match of orderedResults) {
     const home = ensure(match.homeTeam);
     const away = ensure(match.awayTeam);
 
@@ -137,6 +141,9 @@ function buildTeamStats(results) {
 
     homeGoals += match.homeScore;
     awayGoals += match.awayScore;
+
+    home.recent.push({ points: match.homeScore > match.awayScore ? 3 : match.homeScore === match.awayScore ? 1 : 0, scored: match.homeScore, conceded: match.awayScore });
+    away.recent.push({ points: match.awayScore > match.homeScore ? 3 : match.awayScore === match.homeScore ? 1 : 0, scored: match.awayScore, conceded: match.homeScore });
   }
 
   const count = results.filter(validResult).length;
@@ -145,6 +152,19 @@ function buildTeamStats(results) {
     matches: count,
     leagueHomeGoals: count ? homeGoals / count : 0,
     leagueAwayGoals: count ? awayGoals / count : 0,
+  };
+}
+
+function summarizeRecentForm(matches) {
+  const recent = matches.slice(-5);
+  if (!recent.length) return { matches: 0, points: 0, pointsPerMatch: 0, goalsScored: 0, goalsConceded: 0 };
+  const points = recent.reduce((sum, match) => sum + match.points, 0);
+  return {
+    matches: recent.length,
+    points,
+    pointsPerMatch: Number((points / recent.length).toFixed(2)),
+    goalsScored: recent.reduce((sum, match) => sum + match.scored, 0),
+    goalsConceded: recent.reduce((sum, match) => sum + match.conceded, 0),
   };
 }
 
@@ -211,6 +231,8 @@ function buildPredictions(fixtures, historicalResults) {
       historicalMatches: stats.matches,
       homeVenueMatches: homeAttack.played,
       awayVenueMatches: awayAttack.played,
+      homeRecentForm: summarizeRecentForm(home?.recent || []),
+      awayRecentForm: summarizeRecentForm(away?.recent || []),
       sampleSizeWarning: sampleSize < 5
         ? "Limited venue-specific history; treat this estimate cautiously."
         : null,
