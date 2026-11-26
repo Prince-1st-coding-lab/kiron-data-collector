@@ -4,5 +4,7 @@ node_modules/
 !.env.example
 data/raw/*
 !data/raw/.gitkeep
+data/normalized/*
+!data/normalized/.gitkeep
 npm-debug.log*
 .DS_Store
