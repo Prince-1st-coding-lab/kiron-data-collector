@@ -6,7 +6,7 @@
 <title>Kiron Data Dashboard</title>
 <style>
 :root{color-scheme:dark;--bg:#0b1020;--panel:#121a2d;--panel2:#18233a;--line:#26334d;--text:#eef3ff;--muted:#91a0bb;--accent:#55d6a5;--blue:#79a9ff;--warn:#f2c46d}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Inter,system-ui,Segoe UI,sans-serif}button{font:inherit}.wrap{max-width:1240px;margin:auto;padding:28px 20px 60px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:26px}.brand{display:flex;align-items:center;gap:12px}.logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,#55d6a5,#3d81dd);display:grid;place-items:center;color:#07131a;font-weight:900;font-size:18px}.eyebrow{color:var(--accent);font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}.title{font-size:24px;font-weight:800;letter-spacing:-.03em}.sub{color:var(--muted);font-size:12px}.actions{display:flex;align-items:center;gap:10px}.status{color:var(--muted);font-size:12px}.btn{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 13px;cursor:pointer}.btn:hover{border-color:var(--accent)}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:22px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px}.stat{padding:17px}.stat span{display:block;color:var(--muted);font-size:12px}.stat strong{display:block;font-size:27px;margin-top:5px;letter-spacing:-.04em}.panel{padding:18px;margin-top:16px}.panelhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.panel h2{font-size:15px;margin:0}.tag{font-size:11px;color:var(--muted);border:1px solid var(--line);padding:4px 8px;border-radius:20px}.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:650px}th{text-align:left;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:10px;border-bottom:1px solid var(--line)}td{padding:13px 10px;border-bottom:1px solid #202c42;white-space:nowrap}tr:last-child td{border-bottom:0}.teams{font-weight:700}.vs{color:var(--muted);padding:0 6px}.prob{display:flex;gap:4px;min-width:150px}.prob span{font-size:11px;text-align:center;padding:4px 5px;border-radius:5px;background:var(--panel2);flex:1}.prob .home{color:var(--accent)}.prob .draw{color:var(--warn)}.prob .away{color:var(--blue)}.score{font-weight:800;color:var(--accent)}.empty{padding:28px;text-align:center;color:var(--muted)}.foot{margin-top:20px;color:var(--muted);font-size:11px;text-align:center}.warning{color:var(--warn);font-size:11px;white-space:normal;max-width:210px}.tabs{display:flex;gap:8px;flex-wrap:wrap}.tab{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:7px 11px;cursor:pointer}.tab.active{background:var(--panel2);color:var(--text);border-color:var(--accent)}.hidden{display:none}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Inter,system-ui,Segoe UI,sans-serif}button{font:inherit}.wrap{max-width:1240px;margin:auto;padding:28px 20px 60px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:26px}.brand{display:flex;align-items:center;gap:12px}.logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,#55d6a5,#3d81dd);display:grid;place-items:center;color:#07131a;font-weight:900;font-size:18px}.eyebrow{color:var(--accent);font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}.title{font-size:24px;font-weight:800;letter-spacing:-.03em}.sub{color:var(--muted);font-size:12px}.actions{display:flex;align-items:center;gap:10px}.status{color:var(--muted);font-size:12px}.btn{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 13px;cursor:pointer}.btn:hover{border-color:var(--accent)}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:22px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px}.stat{padding:17px}.stat span{display:block;color:var(--muted);font-size:12px}.stat strong{display:block;font-size:27px;margin-top:5px;letter-spacing:-.04em}.panel{padding:18px;margin-top:16px}.panelhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.panel h2{font-size:15px;margin:0}.tag{font-size:11px;color:var(--muted);border:1px solid var(--line);padding:4px 8px;border-radius:20px}.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:650px}th{text-align:left;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:10px;border-bottom:1px solid var(--line)}td{padding:13px 10px;border-bottom:1px solid #202c42;white-space:nowrap}tr:last-child td{border-bottom:0}.teams{font-weight:700}.vs{color:var(--muted);padding:0 6px}.prob{display:flex;gap:4px;min-width:150px}.prob span{font-size:11px;text-align:center;padding:4px 5px;border-radius:5px;background:var(--panel2);flex:1}.prob .home{color:var(--accent)}.prob .draw{color:var(--warn)}.prob .away{color:var(--blue)}.score{font-weight:800;color:var(--accent)}.empty{padding:28px;text-align:center;color:var(--muted)}.foot{margin-top:20px;color:var(--muted);font-size:11px;text-align:center}.warning{color:var(--warn);font-size:11px;white-space:normal;max-width:210px}.tabs{display:flex;gap:8px;flex-wrap:wrap}.tab{background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:7px 11px;cursor:pointer}.tab.active{background:var(--panel2);color:var(--text);border-color:var(--accent)}.hidden{display:none}.freshness{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.freshness-main{display:flex;align-items:center;gap:12px}.freshness-dot{width:11px;height:11px;border-radius:50%;background:var(--muted);box-shadow:0 0 0 4px #91a0bb20}.freshness-dot.fresh{background:var(--accent);box-shadow:0 0 0 4px #55d6a520}.freshness-dot.stale{background:#f2c46d;box-shadow:0 0 0 4px #f2c46d20}.freshness-dot.none{background:#ef7777;box-shadow:0 0 0 4px #ef777720}.freshness-state{font-weight:800;font-size:13px}.freshness-detail{color:var(--muted);font-size:12px}.freshness-age{font-size:20px;font-weight:800;letter-spacing:-.03em}
 @media(max-width:760px){.wrap{padding:20px 13px}.stats{grid-template-columns:repeat(2,1fr)}.top{align-items:flex-start}.title{font-size:20px}.status{display:none}.panel{padding:14px}.stat strong{font-size:23px}}
 </style>
 </head>
@@ -16,6 +16,10 @@
  <div class="brand"><div class="logo">K</div><div><div class="eyebrow">Kiron • Data center</div><div class="title">Football Dashboard</div><div class="sub">Fixtures, results and statistical predictions</div></div></div>
  <div class="actions"><span class="status" id="updated">Waiting for data…</span><button class="btn" id="refresh">↻ Refresh</button></div>
 </header>
+<section class="panel freshness" aria-live="polite">
+ <div class="freshness-main"><span class="freshness-dot none" id="freshnessDot"></span><div><div class="eyebrow">Results data freshness</div><div class="freshness-state" id="freshnessStatus">Checking collection time…</div><div class="freshness-detail" id="freshnessCollected">Last collected: —</div></div></div>
+ <div><div class="freshness-age" id="freshnessAge">—</div><div class="freshness-detail">Age of latest saved results data</div></div>
+</section>
 <section class="stats">
  <div class="card stat"><span>Upcoming fixtures</span><strong id="fixtureCount">—</strong></div>
  <div class="card stat"><span>Predictions generated</span><strong id="predictionCount">—</strong></div>
@@ -38,6 +42,34 @@
 </div>
 <script>
 const el=id=>document.getElementById(id);
+let resultsCollectedAt=null;
+const ageLabel=ms=>{
+ if(ms===null||!Number.isFinite(ms))return "No data";
+ const seconds=Math.floor(ms/1000);
+ if(seconds<60)return seconds+" sec"+(seconds===1?"":"s");
+ const minutes=Math.floor(seconds/60);
+ if(minutes<60)return minutes+" min"+(minutes===1?"":"s");
+ const hours=Math.floor(minutes/60);
+ if(hours<24)return hours+" hr"+(hours===1?"":"s")+" "+(minutes%60)+" min";
+ const days=Math.floor(hours/24);
+ return days+" day"+(days===1?"":"s")+" "+(hours%24)+" hr";
+};
+function renderFreshness(){
+ const status=el("freshnessStatus"), dot=el("freshnessDot");
+ if(!resultsCollectedAt){
+  status.textContent="NO DATA — results have not been collected";
+  el("freshnessCollected").textContent="Last collected: unavailable";
+  el("freshnessAge").textContent="No data";
+  dot.className="freshness-dot none";
+  return;
+ }
+ const age=Math.max(0,Date.now()-resultsCollectedAt);
+ const fresh=window.resultsStaleAfterMs!==null && age<=window.resultsStaleAfterMs;
+ status.textContent=fresh?"FRESH — recent results data":"STALE — collection is overdue";
+ el("freshnessCollected").textContent="Last collected: "+new Date(resultsCollectedAt).toLocaleString();
+ el("freshnessAge").textContent=ageLabel(age)+" ago";
+ dot.className="freshness-dot "+(fresh?"fresh":"stale");
+}
 const safe=value=>String(value??"—").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const date=value=>{if(!value)return "—";const d=new Date(String(value).replace(" ","T"));return Number.isNaN(d.getTime())?safe(value):d.toLocaleString()};
 function emptyRow(cols,msg){return '<tr><td colspan="'+cols+'" class="empty">'+safe(msg)+'</td></tr>'}
@@ -49,6 +81,10 @@ async function load(){
   const predictions=Array.isArray(data.predictions)?data.predictions:[];
   const fixtures=Array.isArray(data.matches)?data.matches:[];
   const results=Array.isArray(data.results)?data.results:[];
+  const freshness=data.resultsFreshness||{};
+  resultsCollectedAt=freshness.lastCollectedAt?new Date(freshness.lastCollectedAt).getTime():null;
+  window.resultsStaleAfterMs=Number.isFinite(freshness.staleAfterMs)?freshness.staleAfterMs:null;
+  renderFreshness();
   el("fixtureCount").textContent=fixtures.length;
   el("predictionCount").textContent=predictions.length;
   el("resultCount").textContent=results.length;
@@ -65,7 +101,7 @@ async function load(){
  }catch(error){el("updated").textContent="Could not load data";el("predictionRows").innerHTML=emptyRow(5,error.message)}
  finally{el("refresh").disabled=false}
 }
-el("refresh").addEventListener("click",load);load();setInterval(load,30000);
+el("refresh").addEventListener("click",load);load();setInterval(load,30000);setInterval(renderFreshness,1000);
 </script>
 </body>
 </html>
