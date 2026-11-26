@@ -25,6 +25,9 @@ test("buildPredictions returns normalized probabilities and expected goals", () 
     .reduce((sum, value) => sum + value, 0);
   assert.ok(Math.abs(total - 100) <= 0.2);
   assert.match(predictions[0].mostLikelyScore, /^\d+-\d+$/);
+  assert.deepEqual(Object.keys(predictions[0].markets), [
+    "1X2", "BTTS", "1X2_BTTS", "OVER_UNDER_1_5", "DOUBLE_CHANCE"
+  ]);
 });
 
 test("buildPredictions reports insufficient history instead of fabricating estimates", () => {
