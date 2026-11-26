@@ -1,6 +1,6 @@
-# Kiron / PlayBetMan Data Collector
+# Kiron / PlayBetMan Data Collector & Prediction Engine
 
-A Node.js 18+ application that collects authorized PlayBetMan football fixtures, results and standings, preserves original API responses, and writes normalized JSON datasets for downstream analysis.
+A Node.js 18+ application that collects authorized PlayBetMan football fixtures, results and standings, preserves original API responses, and writes normalized JSON datasets for downstream statistical analysis.
 
 ## Features
 
@@ -9,8 +9,10 @@ A Node.js 18+ application that collects authorized PlayBetMan football fixtures,
 - Raw timestamped JSON archives under `data/raw/`.
 - Normalized fixture and result records under `data/normalized/`.
 - Live and standings snapshots are preserved without guessing undocumented response fields.
-- Unified dataset joins fixture and result records by match ID and includes the latest live and standings snapshots when available.
-- Automated unit tests for the normalizers.
+- Unified dataset joins fixture and result records by match ID.
+- Venue-adjusted independent Poisson baseline for 1X2 probabilities and expected goals.
+- Historical result files are deduplicated by match ID before analysis.
+- Automated unit tests for normalizers and prediction calculations.
 - Secrets and collected data are excluded from Git.
 
 ## Requirements
@@ -43,52 +45,57 @@ Copy `.env.example` to `.env` and enter your actual league page URL and verified
 | `RESULTS_INTERVAL_MINUTES` | Results polling interval |
 | `STANDINGS_INTERVAL_MINUTES` | Standings polling interval |
 
-The example IDs are placeholders/defaults from testing. Confirm that they are still valid for the competition you are collecting.
+Confirm that competition and round IDs are current before running. Never commit your real `.env`, cookies, session URLs or tokens.
 
 ## Run
 
-Test API connectivity:
-
 ```bash
-npm run test:connection
-```
-
-Run unit tests:
-
-```bash
+npm install
 npm test
-```
-
-Start the scheduler:
-
-```bash
+npm run test:connection
 npm run dev
 ```
 
-For a normal production process, use `npm start` under a persistent Node.js worker or process manager. This is a long-running collector, not a static website deployment.
+The scheduler collects fixtures, results and standings. After a successful collection it rebuilds the unified dataset and generates predictions when usable historical results exist.
+
+Generate predictions manually:
+
+```bash
+npm run predict
+```
 
 ## Data output
 
 ```text
 data/
-  raw/             # complete original API responses
+  raw/                    # complete original API responses
   normalized/
-    matches-*.json # normalized fixtures and market outcomes
-    results-*.json # one normalized record per completed match
-    live-*.json    # timestamped live response snapshot
-    standings-*.json
-    unified-*.json # joined fixtures/results plus latest snapshots
+    matches-*.json        # normalized fixtures and market outcomes
+    results-*.json        # one normalized record per completed match
+    live-*.json           # timestamped live response snapshot
+    standings-*.json      # timestamped standings snapshot
+    unified-*.json        # latest fixtures/results plus snapshots
+    predictions-*.json    # model estimates for latest fixtures
 ```
 
-The unified dataset is regenerated after each successful scheduled collection. Match records are joined by `matchId`. If the API does not return a match ID, records cannot be reliably joined and are retained separately.
+## Prediction model
 
-Live collection is implemented as a callable collector, but is not scheduled automatically: its endpoint requires explicit `period`, `end_time` and `round_id` values. The unified dataset includes the latest live snapshot after one has been collected.
+The current model is a transparent baseline, not a trained machine-learning model. It:
+1. Reads all normalized result archives and deduplicates records.
+2. Calculates home-team home scoring/conceding rates and away-team away scoring/conceding rates.
+3. Smooths sparse team rates toward competition averages using a three-match prior.
+4. Estimates expected goals for each upcoming fixture.
+5. Uses independent Poisson goal probabilities to estimate home-win, draw and away-win probabilities.
 
-## Data integrity and limitations
+Each prediction includes expected goals, 1X2 percentages, the most likely scoreline, and sample-size context. Probabilities are estimates, not guarantees. The model currently does not use market odds, player availability, injuries, weather, or verified live/standings fields. It requires a meaningful completed-results history; insufficient data is reported rather than fabricated.
 
-- Raw API responses are retained so future normalizer improvements can be made without recollecting historical data.
-- The live and standings response structures have not yet been supplied as representative samples. They are preserved as snapshots rather than mapped to invented field names.
-- The unified JSON file combines the latest saved files. It is a convenient working dataset, not a transactional database or a guaranteed complete historical warehouse.
-- Polling intervals are configurable starting values, not confirmed API rate limits. Respect the service's access rules and avoid excessive requests.
-- This project does not calculate betting predictions or guarantee outcomes. It prepares collected data for later statistical analysis.
-- Keep account-specific responses, session URLs, cookies and tokens private.
+## Live collection limitation
+
+Live collection remains a callable collector, not an automatic scheduled job. Its endpoint requires explicit `period`, `end_time` and `round_id` values. The live and standings payloads are preserved as snapshots until representative schemas are verified.
+
+## Data integrity
+
+- Raw API responses are retained for future normalizer improvements.
+- Unified JSON is a working snapshot, not a transactional database or guaranteed complete historical warehouse.
+- Polling intervals are configurable starting values, not confirmed API rate limits. Respect the service's access rules.
+- This project does not guarantee betting outcomes.
