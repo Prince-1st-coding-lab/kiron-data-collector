@@ -256,7 +256,45 @@ function generatePredictions() {
   return { filePath, predictions, output };
 }
 
+
+function generatePredictionsForRound(roundId, fixtures, period = {}) {
+  if (!roundId) throw new Error("roundId is required to generate round predictions.");
+
+  const maxPreviousRounds = Number(process.env.MAX_PREVIOUS_ROUNDS || 5);
+  if (!Number.isInteger(maxPreviousRounds) || maxPreviousRounds < 1) {
+    throw new Error("MAX_PREVIOUS_ROUNDS must be a positive whole number.");
+  }
+
+  const allHistoricalResults = readHistoricalResults();
+  const selectedHistory = selectPreviousRounds(allHistoricalResults, String(roundId), maxPreviousRounds);
+  const predictions = buildPredictions(fixtures, selectedHistory.results);
+
+  const output = {
+    schemaVersion: 2,
+    model: "venue-adjusted-independent-poisson-baseline",
+    generatedAt: new Date().toISOString(),
+    roundId: String(roundId),
+    roundStartTime: period.startTime ?? null,
+    roundEndTime: period.endTime ?? null,
+    seasonId: period.seasonId ?? null,
+    competitionId: period.competitionId ?? null,
+    maxPreviousRounds,
+    historicalRoundIds: selectedHistory.selectedRoundIds,
+    historicalMatches: selectedHistory.results.length,
+    predictions,
+  };
+
+  const filePath = saveNormalizedData("predictions", output);
+  console.log(
+    "Generated " + predictions.length + " predictions for round " + roundId +
+    " using " + selectedHistory.results.length + " historical matches."
+  );
+
+  return { filePath, predictions, output };
+}
+
 module.exports = {
+  generatePredictionsForRound,
   buildPredictions,
   readHistoricalResults,
   selectPreviousRounds,
