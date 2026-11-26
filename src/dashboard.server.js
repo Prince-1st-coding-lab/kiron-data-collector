@@ -4,6 +4,7 @@ const path = require("path");
 
 const ROOT = path.join(process.cwd(), "data", "normalized");
 const PUBLIC = path.join(process.cwd(), "public");
+const { evaluateHistoricalPredictions, buildTopPicks, recentRoundPredictionSnapshots } = require("./services/performance.service");
 
 function latest(prefix) {
   if (!fs.existsSync(ROOT)) return null;
@@ -68,11 +69,30 @@ function startDashboardServer(port = Number(process.env.DASHBOARD_PORT || 3000))
       const standings = latest("standings");
 
       if (url.pathname === "/api/dashboard") {
+        const performance = evaluateHistoricalPredictions();
+        const roundSnapshots = recentRoundPredictionSnapshots(2);
+        const topPicks = buildTopPicks(performance, 2);
+        const combinedPredictions = roundSnapshots.flatMap((snapshot) =>
+          (snapshot.predictions || []).map((prediction) => ({
+            ...prediction,
+            roundId: snapshot.roundId || snapshot.currentRoundId || null,
+            roundStartTime: snapshot.roundStartTime || null,
+            roundEndTime: snapshot.roundEndTime || null,
+          }))
+        );
         return sendJson(res, {
           updatedAt: new Date().toISOString(),
           resultsFreshness: getResultsFreshness(results),
-          predictions: predictions?.data?.predictions || [],
+          predictions: combinedPredictions.length ? combinedPredictions : (predictions?.data?.predictions || []),
           predictionMeta: predictions?.data || null,
+          roundPredictions: roundSnapshots.map((snapshot) => ({
+            roundId: snapshot.roundId || snapshot.currentRoundId || null,
+            roundStartTime: snapshot.roundStartTime || null,
+            roundEndTime: snapshot.roundEndTime || null,
+            fixtureCount: (snapshot.predictions || []).length,
+          })),
+          performance,
+          topPicks,
           matches: Array.isArray(matches?.data) ? matches.data : [],
           results: Array.isArray(results?.data) ? results.data : [],
           live: live?.data || null,
