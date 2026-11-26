@@ -1,14 +1,10 @@
 const cron = require("node-cron");
-const { collectMatches } = require("../collectors/matches.collector");
 const { collectResults } = require("../collectors/results.collector");
 const { collectStandings } = require("../collectors/standings.collector");
+const { collectNextRound } = require("../collectors/rounds.collector");
 const { buildUnifiedDataset } = require("../services/dataset.service");
-const { generatePredictions } = require("../services/prediction.service");
 
 const competition_id = Number(process.env.COMPETITION_ID);
-// The API request identifier differs from the roundId inside each returned match.
-const round_id = process.env.MATCHES_REQUEST_ROUND_ID || process.env.ROUND_ID || process.env.CURRENT_ROUND_ID;
-const sub_type_id = process.env.MARKET_TYPE || "1X2";
 
 function everyMinutes(value, fallback) {
   const minutes = Number(value || fallback);
@@ -20,46 +16,63 @@ function everyMinutes(value, fallback) {
 
 async function runCollection(name, task) {
   try {
-    console.log(`Starting ${name} collection...`);
+    console.log("Starting " + name + " collection...");
     await task();
-    console.log(`${name} collection completed.`);
+    console.log(name + " collection completed.");
 
     const unified = buildUnifiedDataset();
-    console.log(`Unified dataset saved: ${unified.filePath}`);
+    console.log("Unified dataset saved: " + unified.filePath);
+  } catch (error) {
+    console.error(name + " collection failed: " + error.message);
+  }
+}
 
-    const predictionRun = generatePredictions();
-    if (predictionRun.filePath) {
-      console.log(`Predictions saved: ${predictionRun.filePath}`);
-    } else {
-      console.log(`Predictions not generated: ${predictionRun.reason}`);
+let roundPollRunning = false;
+
+async function runRoundDiscovery() {
+  if (roundPollRunning) return;
+  roundPollRunning = true;
+  try {
+    const result = await collectNextRound();
+    if (result.round && !result.skipped) {
+      console.log(
+        "Round " + result.round.roundId + " processed: " +
+        result.matches + " fixtures, " + result.predictions + " predictions."
+      );
     }
   } catch (error) {
-    console.error(`${name} collection failed: ${error.message}`);
+    console.error("Round discovery failed: " + error.message);
+  } finally {
+    roundPollRunning = false;
   }
 }
 
 function startScheduler() {
-  if (!Number.isInteger(competition_id) || competition_id <= 0 || !round_id) {
-    throw new Error("Set valid COMPETITION_ID and MATCHES_REQUEST_ROUND_ID in .env.");
+  if (!Number.isInteger(competition_id) || competition_id <= 0) {
+    throw new Error("Set a valid COMPETITION_ID in .env.");
   }
 
-  const matchesInterval = everyMinutes(process.env.MATCHES_INTERVAL_MINUTES, 10);
-  const resultsInterval = everyMinutes(process.env.RESULTS_INTERVAL_MINUTES, 10);
+  const resultsInterval = everyMinutes(process.env.RESULTS_INTERVAL_MINUTES, 1);
   const standingsInterval = everyMinutes(process.env.STANDINGS_INTERVAL_MINUTES, 30);
+  const roundPollSeconds = Number(process.env.ROUND_POLL_INTERVAL_SECONDS || 15);
 
-  const matchesTask = () => collectMatches({ round_id, competition_id, sub_type_id });
+  if (!Number.isInteger(roundPollSeconds) || roundPollSeconds < 5 || roundPollSeconds > 120) {
+    throw new Error("ROUND_POLL_INTERVAL_SECONDS must be a whole number between 5 and 120.");
+  }
+
   const resultsTask = () => collectResults(competition_id);
   const standingsTask = () => collectStandings(competition_id);
 
-  cron.schedule(`*/${matchesInterval} * * * *`, () => runCollection("Matches", matchesTask));
-  cron.schedule(`*/${resultsInterval} * * * *`, () => runCollection("Results", resultsTask));
-  cron.schedule(`*/${standingsInterval} * * * *`, () => runCollection("Standings", standingsTask));
+  cron.schedule("*/" + resultsInterval + " * * * *", () => runCollection("Results", resultsTask));
+  cron.schedule("*/" + standingsInterval + " * * * *", () => runCollection("Standings", standingsTask));
 
-  console.log("Scheduler started.");
-  console.log(`Matches: every ${matchesInterval} minutes | Results: every ${resultsInterval} minutes | Standings: every ${standingsInterval} minutes`);
-  console.log(`Matches API request ID: ${round_id} | Prediction round ID: ${process.env.CURRENT_ROUND_ID || "not configured"}`);
+  console.log("Dynamic round scheduler started.");
+  console.log("Round timeline: /league/fetchP every " + roundPollSeconds + " seconds");
+  console.log("Results: every " + resultsInterval + " minute(s) | Standings: every " + standingsInterval + " minutes");
+  console.log("Competition ID: " + competition_id + " | Round IDs and times are read from the API.");
 
-  runCollection("Matches", matchesTask);
+  runRoundDiscovery();
+  setInterval(runRoundDiscovery, roundPollSeconds * 1000);
   runCollection("Results", resultsTask);
   runCollection("Standings", standingsTask);
 }
