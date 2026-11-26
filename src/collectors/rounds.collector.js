@@ -7,6 +7,7 @@ const { generatePredictionsForRound } = require("../services/prediction.service"
 const TIMEZONE = process.env.PLAYBETMAN_TIMEZONE || "Africa/Johannesburg";
 const processedRoundIds = new Set();
 let lastPeriodsSignature = "";
+let activeRound = null;
 
 function formatInTimezone(date, timeZone) {
   const parts = new Intl.DateTimeFormat("en-GB", {
@@ -63,6 +64,7 @@ async function collectNextRound() {
   }
 
   const nextPeriod = getNextUpcomingPeriod(periods);
+  activeRound = nextPeriod;
   if (!nextPeriod) {
     return { periodsFile, totalPeriods: periods.length, round: null, reason: "No upcoming round was returned." };
   }
@@ -115,4 +117,14 @@ async function collectNextRound() {
   };
 }
 
-module.exports = { collectNextRound, getNextUpcomingPeriod, formatInTimezone };
+function isRoundLive(period, now = new Date()) {
+  if (!period?.startTime || !period?.endTime) return false;
+  const nowText = formatInTimezone(now, TIMEZONE);
+  return String(period.startTime) <= nowText && String(period.endTime) >= nowText;
+}
+
+function getActiveRound() {
+  return activeRound;
+}
+
+module.exports = { collectNextRound, getNextUpcomingPeriod, formatInTimezone, isRoundLive, getActiveRound };
