@@ -63,7 +63,11 @@ async function collectNextRound() {
     lastPeriodsSignature = periodsSignature;
   }
 
-  const nextPeriod = getNextUpcomingPeriod(periods);
+  // Keep the selected round while it is in progress, even if fetchP removes
+  // it from the upcoming-period list immediately after kickoff.
+  const nextPeriod = isRoundLive(activeRound)
+    ? activeRound
+    : getNextUpcomingPeriod(periods);
   activeRound = nextPeriod;
   if (!nextPeriod) {
     return { periodsFile, totalPeriods: periods.length, round: null, reason: "No upcoming round was returned." };
