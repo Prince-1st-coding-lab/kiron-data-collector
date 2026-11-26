@@ -235,7 +235,14 @@ function buildTopPicks(performance = evaluateHistoricalPredictions(), roundLimit
       }
     }
   }
-  return candidates.sort((a, b) => b.rankingScore - a.rankingScore).slice(0, 3);
+  const ranked = candidates.sort((a, b) => b.rankingScore - a.rankingScore);
+  const selectedFixtures = new Set();
+  return ranked.filter((candidate) => {
+    const fixtureKey = [candidate.roundId, candidate.matchId || candidate.fixture].join("|");
+    if (selectedFixtures.has(fixtureKey)) return false;
+    selectedFixtures.add(fixtureKey);
+    return true;
+  }).slice(0, 3);
 }
 
 module.exports = { evaluateHistoricalPredictions, buildTopPicks, recentRoundPredictionSnapshots, actualMarketOutcomes, parseInTimezone };
