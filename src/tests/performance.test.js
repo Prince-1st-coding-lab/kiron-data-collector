@@ -8,7 +8,7 @@ test("actual result maps to all five supported market outcomes", () => {
     BTTS: "YES",
     "1X2_BTTS": "HOME_YES",
     OVER_UNDER_1_5: "OVER",
-    DOUBLE_CHANCE: "1X",
+    DOUBLE_CHANCE: ["1X", "12"],
   });
 });
 
@@ -18,7 +18,7 @@ test("draw and no-BTTS results map correctly", () => {
     BTTS: "NO",
     "1X2_BTTS": "DRAW_NO",
     OVER_UNDER_1_5: "UNDER",
-    DOUBLE_CHANCE: "12",
+    DOUBLE_CHANCE: ["1X", "X2"],
   });
 });
 
