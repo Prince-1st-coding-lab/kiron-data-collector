@@ -18,7 +18,11 @@ async function collectMatches({ round_id, competition_id, sub_type_id = "1X2", t
   });
 
   const rawFile = saveRawResponse("matches", response);
-  const matches = normalizeMatches(response);
+  const matches = normalizeMatches(response).map((match) => ({
+    ...match,
+    roundId: match.roundId ?? String(round_id),
+    competitionId: match.competitionId ?? competition_id,
+  }));
   const normalizedFile = saveNormalizedData("matches", matches);
 
   console.log(`Collected ${matches.length} normalized fixture matches.`);
