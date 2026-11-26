@@ -1,12 +1,16 @@
 const playBetMan = require("../clients/playbetman.client");
-const { saveRawResponse } = require("../services/storage.service");
+const {
+  saveRawResponse,
+  saveNormalizedData,
+} = require("../services/storage.service");
+const { normalizeSnapshot } = require("../normalizers/snapshot.normalizer");
 
 async function collectLive({ period, end_time, competition_id, round_id, sub_type_id = "1X2", tab = "" }) {
   if (!period || !end_time || !competition_id || !round_id) {
     throw new Error("period, end_time, competition_id and round_id are required");
   }
 
-  const data = await playBetMan.fetchLive({
+  const response = await playBetMan.fetchLive({
     period,
     end_time,
     competition_id,
@@ -15,8 +19,10 @@ async function collectLive({ period, end_time, competition_id, round_id, sub_typ
     tab
   });
 
-  saveRawResponse("live", data);
-  return data;
+  saveRawResponse("live", response);
+  const snapshot = normalizeSnapshot("live", response);
+  saveNormalizedData("live", snapshot);
+  return snapshot;
 }
 
 module.exports = { collectLive };
