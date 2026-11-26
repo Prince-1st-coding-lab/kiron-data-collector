@@ -6,7 +6,7 @@ A Node.js 18+ collector for authorized PlayBetMan football data. It discovers up
 
 - Calls `/league/fetchP` to discover the available round timeline.
 - Uses API-provided `round_id`, `start_time`, `end_time`, `season_id` and `competition_id`; it never guesses round IDs.
-- Polls the timeline automatically and fetches fixtures for the next upcoming round.
+- Polls the timeline automatically and fetches fixtures and predictions for the current/active round plus the immediately following round (or the next two upcoming rounds when no round is active).
 - Polls `/league/fetchLive` every 2 seconds while the selected round is active (configurable).
 - Saves live snapshots tagged with their round ID and scheduled start/end times.
 - Exposes the latest live response to the dashboard beside each prediction; field-level score rendering depends on the actual live response schema.
@@ -17,7 +17,7 @@ A Node.js 18+ collector for authorized PlayBetMan football data. It discovers up
 - Uses a venue-adjusted independent Poisson baseline to estimate expected goals and derive 1X2, BTTS, 1X2 + BTTS, Over/Under 1.5 and Double Chance probabilities.
 - Uses a modular market registry and shared scoreline probability distribution; each fixture has one identity and one actual score across all markets.
 - Keeps previous completed rounds available as prediction history.
-- Includes a local dashboard and automated tests.
+- Includes a local dashboard with current/next-round forecasts, top-three multi-factor picks, historical accuracy by market and automated tests.
 
 ## Requirements
 
@@ -120,3 +120,34 @@ These are internal canonical keys, not confirmed PlayBetMan `sub_type_id` values
 
 All market probabilities are derived from the same truncated 0..8 independent-Poisson scoreline grid and normalized to 100%. Combination market outcomes are mutually exclusive. These are model probabilities, not bookmaker odds or guaranteed outcomes. The current market calculations do not yet consume market-specific odds.
 
+
+
+## Current + next round forecasts
+
+The round scheduler uses the API's own period records. When a round is active, it collects that round and the next scheduled round. When no round is active, it collects the next two upcoming rounds. It does not calculate round IDs or infer kickoff times.
+
+## Historical evaluation and performance dashboard
+
+Every prediction snapshot is archived with its round ID and generation timestamp. The dashboard compares those saved predictions with normalized completed results and reports:
+
+- Overall evaluated picks, correct picks and accuracy.
+- Evaluated count, correct count and accuracy for each supported market.
+- The best-performing market based on actual scored historical predictions.
+- The top three selections across the current and next round.
+
+A forecast is eligible for historical scoring only when its saved generation timestamp is earlier than the match kickoff, interpreted in `PLAYBETMAN_TIMEZONE`. This prevents using a prediction created after kickoff as if it were a pre-match forecast. Double Chance is evaluated using its true overlapping win conditions: on a draw, both 1X and X2 win; on a home win, 1X and 12 win; on an away win, 12 and X2 win.
+
+## Top-three pick ranking
+
+The ranking currently combines four transparent factors:
+
+- Model probability (55%).
+- Venue-specific historical sample support (15%).
+- Historical accuracy for that market (20%, only used once at least 10 picks have been evaluated; otherwise neutral).
+- Recent team form support (10%), including recent scoring/conceding trends for BTTS and Over/Under.
+
+Each pick exposes its probability, ranking score and factor breakdown. The ranking score is a prioritization score, not a calibrated probability. The current project has one baseline model, so performance is reported by market; comparing independent model strategies requires adding additional model implementations and storing their model IDs.
+
+Factors such as confirmed lineups, injuries, weather and external bookmaker price/value are not included: this is virtual football, and those inputs are not currently available or verified in the collected feed. Provider odds can be added as a separate value factor after the exact market subtype and outcome mapping has been confirmed.
+
+Historical accuracy starts accumulating as prediction archives and matching completed results become available. Older forecasts without market predictions or without a reliable match identity are not scored.
