@@ -34,7 +34,9 @@ async function runRoundDiscovery() {
   roundPollRunning = true;
   try {
     const result = await collectNextRound();
-    if (result.round && !result.skipped) {
+    if (result.retrying) {
+      console.log("Round " + result.round.roundId + " is not ready yet: " + result.reason);
+    } else if (result.round && !result.skipped) {
       console.log(
         "Round " + result.round.roundId + " processed: " +
         result.matches + " fixtures, " + result.predictions + " predictions."
