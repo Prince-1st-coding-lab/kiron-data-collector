@@ -12,9 +12,11 @@ test("registry exposes the five requested market families", () => {
 
 test("each binary and multi-outcome market sums to approximately 100 percent", () => {
   const markets = calculateMarketProbabilities(1.35, 0.95);
-  for (const market of Object.values(markets)) {
+  for (const [key, market] of Object.entries(markets)) {
     const total = Object.values(market.outcomes).reduce((sum, value) => sum + value, 0);
-    assert.ok(Math.abs(total - 100) <= 0.3, market.name + " total was " + total);
+    // Double Chance selections overlap, so their three probabilities total 200%, not 100%.
+    const expectedTotal = key === "DOUBLE_CHANCE" ? 200 : 100;
+    assert.ok(Math.abs(total - expectedTotal) <= 0.3, market.name + " total was " + total);
     assert.ok(market.bestOutcome);
   }
 });
