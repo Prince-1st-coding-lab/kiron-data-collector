@@ -150,6 +150,16 @@ function formSupport(prediction, marketKey, selection) {
   const away = prediction.awayRecentForm || {};
   const homePoints = Number(home.pointsPerMatch || 0);
   const awayPoints = Number(away.pointsPerMatch || 0);
+  if (marketKey === "BTTS") {
+    const goalsFor = Number(home.goalsScored || 0) + Number(away.goalsScored || 0);
+    const goalsAgainst = Number(home.goalsConceded || 0) + Number(away.goalsConceded || 0);
+    return Math.max(0, Math.min(100, 35 + (goalsFor + goalsAgainst) * 2));
+  }
+  if (marketKey === "OVER_UNDER_1_5") {
+    const totalRecentGoals = Number(home.goalsScored || 0) + Number(home.goalsConceded || 0) +
+      Number(away.goalsScored || 0) + Number(away.goalsConceded || 0);
+    return Math.max(0, Math.min(100, 30 + totalRecentGoals * 1.5));
+  }
   if (marketKey === "1X2" || marketKey === "DOUBLE_CHANCE" || marketKey === "1X2_BTTS") {
     if (selection.startsWith("HOME") || selection === "1X") return Math.max(0, Math.min(100, 50 + (homePoints - awayPoints) * 12));
     if (selection.startsWith("AWAY") || selection === "X2") return Math.max(0, Math.min(100, 50 + (awayPoints - homePoints) * 12));
