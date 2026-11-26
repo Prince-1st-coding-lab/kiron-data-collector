@@ -21,7 +21,7 @@ function readJsonFiles(prefix) {
 
 function parseInTimezone(value, timeZone = process.env.PLAYBETMAN_TIMEZONE || "Africa/Johannesburg") {
   if (!value) return NaN;
-  const match = String(value).match(/^(\\d{4})-(\\d{2})-(\\d{2})[ T](\\d{2}):(\\d{2})(?::(\\d{2}))?$/);
+  const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/);
   if (!match) return new Date(value).getTime();
   const [, y, mo, d, h, mi, s = "0"] = match;
   const targetUtc = Date.UTC(Number(y), Number(mo) - 1, Number(d), Number(h), Number(mi), Number(s));
@@ -153,12 +153,14 @@ function formSupport(prediction, marketKey, selection) {
   if (marketKey === "BTTS") {
     const goalsFor = Number(home.goalsScored || 0) + Number(away.goalsScored || 0);
     const goalsAgainst = Number(home.goalsConceded || 0) + Number(away.goalsConceded || 0);
-    return Math.max(0, Math.min(100, 35 + (goalsFor + goalsAgainst) * 2));
+    const yesSupport = Math.max(0, Math.min(100, 35 + (goalsFor + goalsAgainst) * 2));
+    return selection === "YES" ? yesSupport : 100 - yesSupport;
   }
   if (marketKey === "OVER_UNDER_1_5") {
     const totalRecentGoals = Number(home.goalsScored || 0) + Number(home.goalsConceded || 0) +
       Number(away.goalsScored || 0) + Number(away.goalsConceded || 0);
-    return Math.max(0, Math.min(100, 30 + totalRecentGoals * 1.5));
+    const overSupport = Math.max(0, Math.min(100, 30 + totalRecentGoals * 1.5));
+    return selection === "OVER" ? overSupport : 100 - overSupport;
   }
   if (marketKey === "1X2" || marketKey === "DOUBLE_CHANCE" || marketKey === "1X2_BTTS") {
     if (selection.startsWith("HOME") || selection === "1X") return Math.max(0, Math.min(100, 50 + (homePoints - awayPoints) * 12));
