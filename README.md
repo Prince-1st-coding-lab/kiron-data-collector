@@ -131,9 +131,10 @@ The round scheduler uses the API's own period records. When a round is active, i
 Every prediction snapshot is archived with its round ID and generation timestamp. The dashboard compares those saved predictions with normalized completed results and reports:
 
 - Overall evaluated picks, correct picks and accuracy.
-- Evaluated count, correct count and accuracy for each supported market.
-- The best-performing market based on actual scored historical predictions.
-- The top three selections across the current and next round.
+- Evaluated count, correct count and accuracy for each supported market and prediction model.
+- The best-performing market/model based on actual scored historical predictions.
+- A prediction-history table showing each saved selection, its probability, the actual winning outcome and whether it was correct.
+- The top three selections across the current and next round, diversified across different fixtures.
 
 A forecast is eligible for historical scoring only when its saved generation timestamp is earlier than the match kickoff, interpreted in `PLAYBETMAN_TIMEZONE`. This prevents using a prediction created after kickoff as if it were a pre-match forecast. Double Chance is evaluated using its true overlapping win conditions: on a draw, both 1X and X2 win; on a home win, 1X and 12 win; on an away win, 12 and X2 win.
 
@@ -146,7 +147,7 @@ The ranking currently combines four transparent factors:
 - Historical accuracy for that market (20%, only used once at least 10 picks have been evaluated; otherwise neutral).
 - Recent team form support (10%), including recent scoring/conceding trends for BTTS and Over/Under.
 
-Each pick exposes its probability, ranking score and factor breakdown. The ranking score is a prioritization score, not a calibrated probability. The current project has one baseline model, so performance is reported by market; comparing independent model strategies requires adding additional model implementations and storing their model IDs.
+Each pick exposes its probability, ranking score and factor breakdown. The top three are selected from different fixtures to avoid filling the shortlist with correlated selections from one match. The ranking score is a prioritization score, not a calibrated probability. The current project has one baseline model, so performance is reported by market; comparing independent model strategies requires adding additional model implementations and storing their model IDs.
 
 Factors such as confirmed lineups, injuries, weather and external bookmaker price/value are not included: this is virtual football, and those inputs are not currently available or verified in the collected feed. Provider odds can be added as a separate value factor after the exact market subtype and outcome mapping has been confirmed.
 
