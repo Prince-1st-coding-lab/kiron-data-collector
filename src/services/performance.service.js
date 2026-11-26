@@ -82,12 +82,12 @@ function evaluateHistoricalPredictions() {
       const kickoff = parseInTimezone(result.startTime || prediction.startTime);
       // Prevent look-ahead leakage: only score forecasts created before kickoff.
       if (!Number.isFinite(generatedAt) || !Number.isFinite(kickoff) || generatedAt >= kickoff) continue;
-      const unique = [snapshot.roundId || prediction.roundId || "", key, generatedAt].join("|");
-      if (seen.has(unique)) continue;
-      seen.add(unique);
       const actual = actualMarketOutcomes(result);
       if (!actual) continue;
       for (const marketKey of MARKET_KEYS) {
+        const unique = [snapshot.roundId || prediction.roundId || "", key, marketKey].join("|");
+        if (seen.has(unique)) continue;
+        seen.add(unique);
         const market = prediction.markets?.[marketKey];
         const selected = market?.bestOutcome;
         if (!selected) continue;
