@@ -64,7 +64,7 @@ Generate predictions manually:
 npm run predict
 ```
 
-## Data output
+## Web dashboard\n\nA lightweight dashboard is served by the same Node.js process using the built-in HTTP module (no extra web framework required). Start the application with `npm run dev`, then open `http://localhost:3000`. It displays the latest normalized fixtures, completed results, prediction probabilities, expected goals and most likely score. The page refreshes automatically every 30 seconds. Set `DASHBOARD_PORT` in `.env` to change the port.\n\n## Data output
 
 ```text
 data/
