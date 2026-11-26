@@ -3,6 +3,7 @@ const { collectMatches } = require("../collectors/matches.collector");
 const { collectResults } = require("../collectors/results.collector");
 const { collectStandings } = require("../collectors/standings.collector");
 const { buildUnifiedDataset } = require("../services/dataset.service");
+const { generatePredictions } = require("../services/prediction.service");
 
 const competition_id = Number(process.env.COMPETITION_ID);
 const round_id = process.env.ROUND_ID;
@@ -24,6 +25,13 @@ async function runCollection(name, task) {
 
     const unified = buildUnifiedDataset();
     console.log(`Unified dataset saved: ${unified.filePath}`);
+
+    const predictionRun = generatePredictions();
+    if (predictionRun.filePath) {
+      console.log(`Predictions saved: ${predictionRun.filePath}`);
+    } else {
+      console.log(`Predictions not generated: ${predictionRun.reason}`);
+    }
   } catch (error) {
     console.error(`${name} collection failed: ${error.message}`);
   }
