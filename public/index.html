@@ -124,7 +124,7 @@ async function load(){
  }catch(error){el("updated").textContent="Could not load data";el("predictionRows").innerHTML=emptyRow(5,error.message)}
  finally{el("refresh").disabled=false}
 }
-el("refresh").addEventListener("click",load);load();setInterval(load,30000);setInterval(renderFreshness,1000);
+el("refresh").addEventListener("click",load);load();setInterval(load,2000);setInterval(renderFreshness,1000);
 </script>
 </body>
 </html>
