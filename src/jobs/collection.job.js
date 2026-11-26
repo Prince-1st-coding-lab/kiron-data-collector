@@ -2,6 +2,7 @@ const cron = require("node-cron");
 const { collectMatches } = require("../collectors/matches.collector");
 const { collectResults } = require("../collectors/results.collector");
 const { collectStandings } = require("../collectors/standings.collector");
+const { buildUnifiedDataset } = require("../services/dataset.service");
 
 const competition_id = Number(process.env.COMPETITION_ID);
 const round_id = process.env.ROUND_ID;
@@ -20,6 +21,9 @@ async function runCollection(name, task) {
     console.log(`Starting ${name} collection...`);
     await task();
     console.log(`${name} collection completed.`);
+
+    const unified = buildUnifiedDataset();
+    console.log(`Unified dataset saved: ${unified.filePath}`);
   } catch (error) {
     console.error(`${name} collection failed: ${error.message}`);
   }
@@ -45,7 +49,6 @@ function startScheduler() {
   console.log("Scheduler started.");
   console.log(`Matches: every ${matchesInterval} minutes | Results: every ${resultsInterval} minutes | Standings: every ${standingsInterval} minutes`);
 
-  // Run one initial collection cycle at startup.
   runCollection("Matches", matchesTask);
   runCollection("Results", resultsTask);
   runCollection("Standings", standingsTask);
