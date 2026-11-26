@@ -6,7 +6,7 @@ const { buildUnifiedDataset } = require("../services/dataset.service");
 const { generatePredictions } = require("../services/prediction.service");
 
 const competition_id = Number(process.env.COMPETITION_ID);
-const round_id = process.env.ROUND_ID;
+const round_id = process.env.CURRENT_ROUND_ID || process.env.ROUND_ID;
 const sub_type_id = process.env.MARKET_TYPE || "1X2";
 
 function everyMinutes(value, fallback) {
