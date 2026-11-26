@@ -49,6 +49,11 @@ function calculateMarketProbabilities(homeLambda, awayLambda) {
 
   const bttsNo = 1 - p.bttsYes;
   const under15 = 1 - p.over15;
+  const sumWhere = (predicate) => matrix.reduce(
+    (sum, score) => sum + (predicate(score) ? score.probability / totalMass : 0),
+    0
+  );
+  const bothScored = (score) => score.home > 0 && score.away > 0;
   const markets = {
     "1X2": {
       outcomes: {
@@ -62,18 +67,12 @@ function calculateMarketProbabilities(homeLambda, awayLambda) {
     },
     "1X2_BTTS": {
       outcomes: {
-        HOME_YES: percentage(p.home * 0 + matrix.reduce((sum, s) =>
-          sum + (s.home > s.away && s.home > 0 && s.away > 0 ? s.probability / totalMass : 0), 0)),
-        HOME_NO: percentage(matrix.reduce((sum, s) =>
-          sum + (s.home > s.away && !(s.home > 0 && s.away > 0) ? s.probability / totalMass : 0), 0)),
-        DRAW_YES: percentage(matrix.reduce((sum, s) =>
-          sum + (s.home === s.away && s.home > 0 && s.away > 0 ? s.probability / totalMass : 0), 0)),
-        DRAW_NO: percentage(matrix.reduce((sum, s) =>
-          sum + (s.home === s.away && !(s.home > 0 && s.away > 0) ? s.probability / totalMass : 0), 0)),
-        AWAY_YES: percentage(matrix.reduce((sum, s) =>
-          sum + (s.home < s.away && s.home > 0 && s.away > 0 ? s.probability / totalMass : 0), 0)),
-        AWAY_NO: percentage(matrix.reduce((sum, s) =>
-          sum + (s.home < s.away && !(s.home > 0 && s.away > 0) ? s.probability / totalMass : 0), 0)),
+        HOME_YES: percentage(sumWhere((s) => s.home > s.away && bothScored(s))),
+        HOME_NO: percentage(sumWhere((s) => s.home > s.away && !bothScored(s))),
+        DRAW_YES: percentage(sumWhere((s) => s.home === s.away && bothScored(s))),
+        DRAW_NO: percentage(sumWhere((s) => s.home === s.away && !bothScored(s))),
+        AWAY_YES: percentage(sumWhere((s) => s.home < s.away && bothScored(s))),
+        AWAY_NO: percentage(sumWhere((s) => s.home < s.away && !bothScored(s))),
       },
     },
     OVER_UNDER_1_5: {
