@@ -43,9 +43,11 @@ function resultKey(match) {
 }
 
 function actualMarketOutcomes(result) {
+  if (result?.homeScore == null || result?.awayScore == null ||
+      result.homeScore === "" || result.awayScore === "") return null;
   const home = Number(result.homeScore);
   const away = Number(result.awayScore);
-  if (!Number.isInteger(home) || !Number.isInteger(away)) return null;
+  if (!Number.isInteger(home) || !Number.isInteger(away) || home < 0 || away < 0) return null;
   const outcome = home > away ? "HOME" : home < away ? "AWAY" : "DRAW";
   const btts = home > 0 && away > 0 ? "YES" : "NO";
   return {
