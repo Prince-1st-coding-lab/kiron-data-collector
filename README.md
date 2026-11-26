@@ -1,19 +1,19 @@
 # Kiron / PlayBetMan Data Collector & Prediction Engine
 
-A Node.js 18+ application that collects authorized PlayBetMan football fixtures, results and standings, preserves original API responses, and writes normalized JSON datasets for downstream statistical analysis.
+A Node.js 18+ collector for authorized PlayBetMan football data. It discovers upcoming virtual-football rounds from the API, fetches each round's fixtures, preserves raw responses, collects completed results and generates round-specific statistical predictions.
 
 ## Features
 
-- Shared Axios client for the tested PlayBetMan league endpoints.
-- Scheduled collection of fixtures/markets, results and standings.
-- Raw timestamped JSON archives under `data/raw/`.
-- Normalized fixture and result records under `data/normalized/`.
-- Live and standings snapshots are preserved without guessing undocumented response fields.
-- Unified dataset joins fixture and result records by match ID.
-- Venue-adjusted independent Poisson baseline for 1X2 probabilities and expected goals.
-- Historical result files are deduplicated by match ID before analysis.
-- Automated unit tests for normalizers and prediction calculations.
-- Secrets and collected data are excluded from Git.
+- Calls `/league/fetchP` to discover the available round timeline.
+- Uses API-provided `round_id`, `start_time`, `end_time`, `season_id` and `competition_id`; it never guesses round IDs.
+- Polls the timeline automatically and fetches fixtures for the next upcoming round.
+- Retries a round if its fixtures are not available yet.
+- Generates predictions tagged with the exact target round ID and its scheduled times.
+- Refreshes completed results every minute by default.
+- Stores timestamped raw and normalized JSON archives.
+- Uses a venue-adjusted independent Poisson baseline for 1X2 estimates and expected goals.
+- Keeps previous completed rounds available as prediction history.
+- Includes a local dashboard and automated tests.
 
 ## Requirements
 
@@ -29,7 +29,7 @@ cd kiron-data-collector
 npm install
 ```
 
-Copy `.env.example` to `.env` and enter your actual league page URL and verified IDs. Do not share or commit the real `.env` file.
+Copy `.env.example` to `.env`, then set your actual league page URL. Do not share or commit the real `.env` file, cookies, session URLs or tokens.
 
 ## Configuration
 
@@ -37,69 +37,62 @@ Copy `.env.example` to `.env` and enter your actual league page URL and verified
 | --- | --- |
 | `PLAYBETMAN_BASE_URL` | API host, normally `https://lite.playbetman.com` |
 | `PLAYBETMAN_LEAGUE_URL` | Actual league page URL used by the tested requests |
-| `PLAYBETMAN_TIMEZONE` | Timezone sent to the API |
-| `COMPETITION_ID` | Competition identifier |
-| `ROUND_ID` | Round identifier used by `fetchMatches` (also used as the current prediction round if `CURRENT_ROUND_ID` is not set) |
-| `CURRENT_ROUND_ID` | Exact round ID to predict; only fixtures from this round are included |
-| `MAX_PREVIOUS_ROUNDS` | Number of most recent completed rounds used as prediction history (default: `5`) |
+| `PLAYBETMAN_TIMEZONE` | Timezone sent to the API and used to interpret round times |
+| `COMPETITION_ID` | Competition identifier; the supplied timeline example uses `10` |
 | `MARKET_TYPE` | Market code, e.g. `1X2` |
-| `MATCHES_INTERVAL_MINUTES` | Fixture and market polling interval |
-| `RESULTS_INTERVAL_MINUTES` | Results polling interval |
-| `STANDINGS_INTERVAL_MINUTES` | Standings polling interval |
+| `ROUND_POLL_INTERVAL_SECONDS` | How often to call `/league/fetchP`; default `15` |
+| `RESULTS_INTERVAL_MINUTES` | Completed-results refresh interval; default `1` |
+| `STANDINGS_INTERVAL_MINUTES` | Standings refresh interval; default `30` |
+| `MAX_PREVIOUS_ROUNDS` | Number of newest completed rounds used as prediction history; default `5` |
 
-Confirm that competition and round IDs are current before running. Never commit your real `.env`, cookies, session URLs or tokens.
+The old fixed `ROUND_ID`, `MATCHES_REQUEST_ROUND_ID` and `CURRENT_ROUND_ID` settings are no longer required by the automatic scheduler.
 
 ## Run
 
 ```bash
 npm install
 npm test
-npm run test:connection
 npm run dev
 ```
 
-The scheduler collects fixtures for `ROUND_ID`, results and standings. It then builds predictions only for `CURRENT_ROUND_ID` (or `ROUND_ID` when the current ID is not separately configured), using completed results from the newest `MAX_PREVIOUS_ROUNDS` distinct earlier rounds. Set these values in `.env` before starting the application. Historical result records must include a `roundId` to be selected.
+Open `http://localhost:3000` for the dashboard.
 
-Generate predictions manually:
+## Round discovery workflow
 
-```bash
-npm run predict
-```
+Every poll sends the verified empty-period request to `/league/fetchP`. The collector normalizes the returned `periods[]`, orders them by `start_time`, selects the next upcoming period using `PLAYBETMAN_TIMEZONE`, and calls `/league/fetchMatches` with that period's exact `round_id` and `competition_id`.
 
-## Web dashboard\n\nA lightweight dashboard is served by the same Node.js process using the built-in HTTP module (no extra web framework required). Start the application with `npm run dev`, then open `http://localhost:3000`. It displays the latest normalized fixtures, completed results, prediction probabilities, expected goals and most likely score. The page refreshes automatically every 30 seconds. Set `DASHBOARD_PORT` in `.env` to change the port.\n\n## Data output
+The prediction output stores `roundId`, `roundStartTime`, `roundEndTime`, `seasonId` and `competitionId`. Fixture records use the selected API round ID as `roundId`; the source's separate match-level round value is retained as `sourceRoundId`.
+
+## Data output
 
 ```text
 data/
   raw/                    # complete original API responses
   normalized/
+    periods-*.json        # available round timeline snapshots
     matches-*.json        # normalized fixtures and market outcomes
-    results-*.json        # one normalized record per completed match
-    live-*.json           # timestamped live response snapshot
-    standings-*.json      # timestamped standings snapshot
+    results-*.json        # normalized completed matches
+    live-*.json           # live response snapshots
+    standings-*.json      # standings snapshots
     unified-*.json        # latest fixtures/results plus snapshots
-    predictions-*.json    # model estimates for latest fixtures
+    predictions-*.json    # round-specific statistical predictions
 ```
 
 ## Prediction model
 
-The current model is a transparent baseline, not a trained machine-learning model. It:
-1. Reads all normalized result archives and deduplicates records.
-2. Excludes the target current round and selects the newest configured number of previous completed rounds by match date.
-3. Uses only fixtures whose `roundId` matches `CURRENT_ROUND_ID`.
-4. Calculates home-team home scoring/conceding rates and away-team away scoring/conceding rates.
-5. Smooths sparse team rates toward competition averages using a three-match prior.
-6. Estimates expected goals for each current-round fixture.
-7. Uses independent Poisson goal probabilities to estimate home-win, draw and away-win probabilities.
+The current model is a transparent statistical baseline, not a trained machine-learning model. It:
 
-Each prediction includes expected goals, 1X2 percentages, the most likely scoreline, and sample-size context. Probabilities are estimates, not guarantees. The model currently does not use market odds, player availability, injuries, weather, or verified live/standings fields. It requires a meaningful completed-results history; insufficient data is reported rather than fabricated.
+1. Reads normalized completed-result archives and deduplicates records.
+2. Excludes the target round and selects the newest configured number of previous rounds.
+3. Calculates home-team home scoring/conceding rates and away-team away scoring/conceding rates.
+4. Smooths sparse team rates toward competition averages using a three-match prior.
+5. Estimates expected goals and independent-Poisson 1X2 probabilities.
 
-## Live collection limitation
+Predictions are estimates, not guarantees. The model does not currently incorporate player availability, injuries, weather or verified live data. Insufficient history is reported rather than fabricated.
 
-Live collection remains a callable collector, not an automatic scheduled job. Its endpoint requires explicit `period`, `end_time` and `round_id` values. The live and standings payloads are preserved as snapshots until representative schemas are verified.
+## Notes
 
-## Data integrity
-
-- Raw API responses are retained for future normalizer improvements.
-- Unified JSON is a working snapshot, not a transactional database or guaranteed complete historical warehouse.
+- API-provided start/end times are treated as authoritative; the collector does not calculate round IDs or round schedules.
+- The current scheduler discovers and predicts the next upcoming round. It does not generate predictions for every future period returned in one timeline response.
 - Polling intervals are configurable starting values, not confirmed API rate limits. Respect the service's access rules.
 - This project does not guarantee betting outcomes.
