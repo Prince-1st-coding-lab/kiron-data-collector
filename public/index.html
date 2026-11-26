@@ -41,6 +41,8 @@
   <div class="card stat"><span>Best market</span><strong id="bestMarket" style="font-size:17px">—</strong></div>
  </div>
  <div class="tablewrap"><table class="accuracy-table"><thead><tr><th>Market</th><th>Evaluated</th><th>Correct</th><th>Accuracy</th></tr></thead><tbody id="marketAccuracy"><tr><td colspan="4" class="empty">No evaluated predictions yet.</td></tr></tbody></table></div>
+ <div class="panelhead" style="margin-top:18px"><h3 style="margin:0">Model comparison</h3><span class="tag">Compare prediction systems</span></div>
+ <div class="tablewrap"><table class="accuracy-table"><thead><tr><th>Prediction model</th><th>Evaluated</th><th>Correct</th><th>Accuracy</th></tr></thead><tbody id="modelAccuracy"><tr><td colspan="4" class="empty">No model results yet.</td></tr></tbody></table></div>
  <div class="pick-meta">Only predictions saved before kickoff are eligible for scoring. Accuracy is unavailable until completed results can be matched to saved forecasts.</div>
 </section>
 <section class="panel">
@@ -139,6 +141,8 @@ function renderPerformance(performance){
  const eligible=entries.filter(([,v])=>v.evaluated>0).sort((a,b)=>(b[1].accuracy||0)-(a[1].accuracy||0));
  el("bestMarket").textContent=eligible.length?eligible[0][0]:"Not available";
  el("marketAccuracy").innerHTML=entries.length?entries.map(([key,value])=>'<tr><td>'+safe(key)+'</td><td>'+safe(value.evaluated)+'</td><td>'+safe(value.correct)+'</td><td class="accuracy-good">'+(value.accuracy==null?"Not available":safe(value.accuracy)+"%")+'</td></tr>').join(""):emptyRow(4,"No evaluated predictions yet.");
+ const models=Object.entries(p.byModel||{});
+ el("modelAccuracy").innerHTML=models.length?models.map(([key,value])=>'<tr><td>'+safe(key)+'</td><td>'+safe(value.evaluated)+'</td><td>'+safe(value.correct)+'</td><td class="accuracy-good">'+(value.accuracy==null?"Not available":safe(value.accuracy)+"%")+'</td></tr>').join(""):emptyRow(4,"No evaluated model predictions yet.");
 }
 
 function emptyRow(cols,msg){return '<tr><td colspan="'+cols+'" class="empty">'+safe(msg)+'</td></tr>'}
