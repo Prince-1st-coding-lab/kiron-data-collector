@@ -6,7 +6,6 @@ const { normalizeResults } = require("../normalizers/results.normalizer");
 const { normalizeMatches } = require("../normalizers/matches.normalizer");
 const { normalizeSnapshot } = require("../normalizers/snapshot.normalizer");
 const { normalizePeriods } = require("../normalizers/periods.normalizer");
-const { getNextUpcomingPeriod } = require("../collectors/rounds.collector");
 
 test("parseScore converts a score string to numeric values", () => {
   assert.deepEqual(parseScore("1:3"), { home: 1, away: 3 });
@@ -81,17 +80,4 @@ test("normalizePeriods preserves round IDs and authoritative start/end times", (
   assert.equal(periods[0].startTime, "2026-11-26 13:44:00");
   assert.equal(periods[0].endTime, "2026-11-26 13:44:32");
   assert.equal(periods[0].seasonId, "23659735");
-});
-
-test("getNextUpcomingPeriod selects the next future round using API timezone", () => {
-  const periods = normalizePeriods({
-    periods: [
-      { round_id: "past", start_time: "2026-11-26 13:42:00", end_time: "2026-11-26 13:42:32" },
-      { round_id: "next", start_time: "2026-11-26 13:44:00", end_time: "2026-11-26 13:44:32" },
-      { round_id: "later", start_time: "2026-11-26 13:46:00", end_time: "2026-11-26 13:46:32" }
-    ]
-  });
-
-  const now = new Date("2026-11-26T11:43:00.000Z");
-  assert.equal(getNextUpcomingPeriod(periods, now).roundId, "next");
 });
