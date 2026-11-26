@@ -4,7 +4,6 @@ const { normalizePeriods } = require("../normalizers/periods.normalizer");
 const { saveRawResponse, saveNormalizedData } = require("../services/storage.service");
 const { generatePredictionsForRound } = require("../services/prediction.service");
 
-const DATA_DIR = path.join(process.cwd(), "data", "normalized");
 const TIMEZONE = process.env.PLAYBETMAN_TIMEZONE || "Africa/Johannesburg";
 const processedRoundIds = new Set();
 let lastPeriodsSignature = "";
