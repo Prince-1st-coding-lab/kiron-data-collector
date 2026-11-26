@@ -39,7 +39,9 @@ Copy `.env.example` to `.env` and enter your actual league page URL and verified
 | `PLAYBETMAN_LEAGUE_URL` | Actual league page URL used by the tested requests |
 | `PLAYBETMAN_TIMEZONE` | Timezone sent to the API |
 | `COMPETITION_ID` | Competition identifier |
-| `ROUND_ID` | Round identifier used by `fetchMatches` |
+| `ROUND_ID` | Round identifier used by `fetchMatches` (also used as the current prediction round if `CURRENT_ROUND_ID` is not set) |
+| `CURRENT_ROUND_ID` | Exact round ID to predict; only fixtures from this round are included |
+| `MAX_PREVIOUS_ROUNDS` | Number of most recent completed rounds used as prediction history (default: `5`) |
 | `MARKET_TYPE` | Market code, e.g. `1X2` |
 | `MATCHES_INTERVAL_MINUTES` | Fixture and market polling interval |
 | `RESULTS_INTERVAL_MINUTES` | Results polling interval |
@@ -56,7 +58,7 @@ npm run test:connection
 npm run dev
 ```
 
-The scheduler collects fixtures, results and standings. After a successful collection it rebuilds the unified dataset and generates predictions when usable historical results exist.
+The scheduler collects fixtures for `ROUND_ID`, results and standings. It then builds predictions only for `CURRENT_ROUND_ID` (or `ROUND_ID` when the current ID is not separately configured), using completed results from the newest `MAX_PREVIOUS_ROUNDS` distinct earlier rounds. Set these values in `.env` before starting the application. Historical result records must include a `roundId` to be selected.
 
 Generate predictions manually:
 
@@ -82,10 +84,12 @@ data/
 
 The current model is a transparent baseline, not a trained machine-learning model. It:
 1. Reads all normalized result archives and deduplicates records.
-2. Calculates home-team home scoring/conceding rates and away-team away scoring/conceding rates.
-3. Smooths sparse team rates toward competition averages using a three-match prior.
-4. Estimates expected goals for each upcoming fixture.
-5. Uses independent Poisson goal probabilities to estimate home-win, draw and away-win probabilities.
+2. Excludes the target current round and selects the newest configured number of previous completed rounds by match date.
+3. Uses only fixtures whose `roundId` matches `CURRENT_ROUND_ID`.
+4. Calculates home-team home scoring/conceding rates and away-team away scoring/conceding rates.
+5. Smooths sparse team rates toward competition averages using a three-match prior.
+6. Estimates expected goals for each current-round fixture.
+7. Uses independent Poisson goal probabilities to estimate home-win, draw and away-win probabilities.
 
 Each prediction includes expected goals, 1X2 percentages, the most likely scoreline, and sample-size context. Probabilities are estimates, not guarantees. The model currently does not use market odds, player availability, injuries, weather, or verified live/standings fields. It requires a meaningful completed-results history; insufficient data is reported rather than fabricated.
 
