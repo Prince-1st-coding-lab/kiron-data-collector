@@ -6,6 +6,22 @@ const ROOT = path.join(process.cwd(), "data", "normalized");
 const PUBLIC = path.join(process.cwd(), "public");
 const { evaluateHistoricalPredictions, buildTopPicks, recentRoundPredictionSnapshots } = require("./services/performance.service");
 
+let analyticsCache = null;
+let analyticsCacheAt = 0;
+
+function getDashboardAnalytics() {
+  if (analyticsCache && Date.now() - analyticsCacheAt < 10000) return analyticsCache;
+  const performance = evaluateHistoricalPredictions();
+  const roundSnapshots = recentRoundPredictionSnapshots(2);
+  analyticsCache = {
+    performance,
+    roundSnapshots,
+    topPicks: buildTopPicks(performance, 2),
+  };
+  analyticsCacheAt = Date.now();
+  return analyticsCache;
+}
+
 function latest(prefix) {
   if (!fs.existsSync(ROOT)) return null;
   const files = fs.readdirSync(ROOT)
@@ -69,9 +85,7 @@ function startDashboardServer(port = Number(process.env.DASHBOARD_PORT || 3000))
       const standings = latest("standings");
 
       if (url.pathname === "/api/dashboard") {
-        const performance = evaluateHistoricalPredictions();
-        const roundSnapshots = recentRoundPredictionSnapshots(2);
-        const topPicks = buildTopPicks(performance, 2);
+        const { performance, roundSnapshots, topPicks } = getDashboardAnalytics();
         const combinedPredictions = roundSnapshots.flatMap((snapshot) =>
           (snapshot.predictions || []).map((prediction) => ({
             ...prediction,
