@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const { saveNormalizedData } = require("./storage.service");
+const { calculateMarketProbabilities } = require("../markets/market.calculators");
 
 const DATA_DIR = path.join(process.cwd(), "data", "normalized");
 const PRIOR_MATCHES = 3;
@@ -205,6 +206,7 @@ function buildPredictions(fixtures, historicalResults) {
         draw: Number((outcomes.draw * 100).toFixed(1)),
         awayWin: Number((outcomes.awayWin * 100).toFixed(1)),
       },
+      markets: calculateMarketProbabilities(expectedHomeGoals, expectedAwayGoals),
       mostLikelyScore: outcomes.mostLikelyScore,
       historicalMatches: stats.matches,
       homeVenueMatches: homeAttack.played,
