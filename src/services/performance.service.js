@@ -95,6 +95,8 @@ function evaluateHistoricalPredictions() {
           model: snapshot.model || "unknown",
           roundId: snapshot.roundId || prediction.roundId || result.roundId || null,
           matchId: result.matchId || prediction.matchId || null,
+          homeTeam: prediction.homeTeam || result.homeTeam || null,
+          awayTeam: prediction.awayTeam || result.awayTeam || null,
           marketKey,
           selected,
           actual: actual[marketKey],
