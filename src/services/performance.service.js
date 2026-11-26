@@ -87,10 +87,10 @@ function evaluateHistoricalPredictions() {
       for (const marketKey of MARKET_KEYS) {
         const unique = [snapshot.roundId || prediction.roundId || "", key, marketKey].join("|");
         if (seen.has(unique)) continue;
-        seen.add(unique);
         const market = prediction.markets?.[marketKey];
         const selected = market?.bestOutcome;
         if (!selected) continue;
+        seen.add(unique);
         records.push({
           roundId: snapshot.roundId || prediction.roundId || result.roundId || null,
           matchId: result.matchId || prediction.matchId || null,
@@ -142,7 +142,7 @@ function recentRoundPredictionSnapshots(limit = 2) {
   }
   return [...byRound.values()]
     .sort((a, b) => String(a.roundStartTime || "").localeCompare(String(b.roundStartTime || "")))
-    .slice(0, limit);
+    .slice(-limit);
 }
 
 function formSupport(prediction, marketKey, selection) {
