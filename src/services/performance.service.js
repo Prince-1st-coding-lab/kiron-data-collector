@@ -213,6 +213,7 @@ function buildTopPicks(performance = evaluateHistoricalPredictions(), roundLimit
         candidates.push({
           roundId: snapshot.roundId,
           roundStartTime: snapshot.roundStartTime,
+          startTime: prediction.startTime || prediction.kickoffTime || snapshot.roundStartTime,
           matchId: prediction.matchId,
           fixture: prediction.homeTeam + " vs " + prediction.awayTeam,
           homeTeam: prediction.homeTeam,
