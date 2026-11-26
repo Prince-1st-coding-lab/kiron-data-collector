@@ -117,7 +117,6 @@ function liveScoreFor(prediction,records){
 }
 function historySummary(prediction){
  const home=prediction.homeRecentForm||{},away=prediction.awayRecentForm||{};
- const line=(name,form)=>name+': '+(form.matches||0)+' games · '+(form.points??0)+'/15 pts · '+(form.goalsScored??0)+':'+(form.goalsConceded??0)+' goals';
  const line=(name,form)=>name+': '+(form.matches||0)+' games · '+(form.points??0)+'/'+((form.matches||0)*3)+' pts · '+(form.goalsScored??0)+':'+(form.goalsConceded??0)+' goals';
  return '<div class="history-cell">'+safe(line('Home',home))+'<br>'+safe(line('Away',away))+'</div>';
 }
