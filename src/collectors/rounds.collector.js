@@ -1,5 +1,3 @@
-const fs = require("fs");
-const path = require("path");
 const playBetMan = require("../clients/playbetman.client");
 const { collectMatches } = require("./matches.collector");
 const { normalizePeriods } = require("../normalizers/periods.normalizer");
@@ -9,6 +7,7 @@ const { generatePredictionsForRound } = require("../services/prediction.service"
 const DATA_DIR = path.join(process.cwd(), "data", "normalized");
 const TIMEZONE = process.env.PLAYBETMAN_TIMEZONE || "Africa/Johannesburg";
 const processedRoundIds = new Set();
+let lastPeriodsSignature = "";
 
 function formatInTimezone(date, timeZone) {
   const parts = new Intl.DateTimeFormat("en-GB", {
@@ -28,10 +27,14 @@ function formatInTimezone(date, timeZone) {
 
 function getNextUpcomingPeriod(periods, now = new Date()) {
   const nowText = formatInTimezone(now, TIMEZONE);
-  return periods.find((period) =>
-    period.startTime &&
-    String(period.startTime) >= nowText
-  ) || null;
+  return periods.find((period) => {
+    if (!period.startTime) return false;
+    const startsInFuture = String(period.startTime) >= nowText;
+    const isCurrentlyRunning = period.endTime &&
+      String(period.startTime) < nowText &&
+      String(period.endTime) >= nowText;
+    return startsInFuture || isCurrentlyRunning;
+  }) || null;
 }
 
 async function collectNextRound() {
@@ -49,9 +52,16 @@ async function collectNextRound() {
     tab: "",
   });
 
-  saveRawResponse("periods", response);
   const periods = normalizePeriods(response);
-  const periodsFile = saveNormalizedData("periods", periods);
+  const periodsSignature = JSON.stringify(periods);
+  let periodsFile = null;
+
+  // Poll frequently, but only archive a timeline snapshot when its contents change.
+  if (periodsSignature !== lastPeriodsSignature) {
+    saveRawResponse("periods", response);
+    periodsFile = saveNormalizedData("periods", periods);
+    lastPeriodsSignature = periodsSignature;
+  }
 
   const nextPeriod = getNextUpcomingPeriod(periods);
   if (!nextPeriod) {
