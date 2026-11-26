@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { buildPredictions } = require("../services/prediction.service");
+const { buildPredictions, selectPreviousRounds } = require("../services/prediction.service");
 
 const history = [
   { matchId: "1", homeTeam: "Alpha", awayTeam: "Beta", homeScore: 2, awayScore: 0 },
@@ -43,4 +43,18 @@ test("buildPredictions skips completed fixtures and invalid team pairings", () =
   ], history);
 
   assert.equal(predictions.length, 0);
+});
+
+
+test("selectPreviousRounds uses only the newest configured completed rounds", () => {
+  const results = [
+    { roundId: "old", startTime: "2026-11-01 12:00:00", matchId: "old-1" },
+    { roundId: "middle", startTime: "2026-11-10 12:00:00", matchId: "middle-1" },
+    { roundId: "recent", startTime: "2026-11-20 12:00:00", matchId: "recent-1" },
+    { roundId: "current", startTime: "2026-11-26 12:00:00", matchId: "current-1" }
+  ];
+
+  const selected = selectPreviousRounds(results, "current", 2);
+  assert.deepEqual(selected.selectedRoundIds, ["recent", "middle"]);
+  assert.deepEqual(selected.results.map((match) => match.matchId), ["middle-1", "recent-1"]);
 });
